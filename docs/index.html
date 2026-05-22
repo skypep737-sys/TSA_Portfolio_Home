@@ -313,6 +313,23 @@
 
     #map { flex: 1; }
 
+    /* ── Zoom-responsive pin scaling ──────────────────────────────────────────
+       CSS transforms the divIcon container; transform-origin matches the anchor
+       so the pin tip stays planted on the correct map coordinate.              */
+    .prop-pin   { transition: transform .15s; transform-origin: bottom center; }
+    .survey-pin { transition: transform .15s; transform-origin: center center; }
+
+    #map.zoom-xs  .prop-pin   { transform: scale(.30); }
+    #map.zoom-sm  .prop-pin   { transform: scale(.50); }
+    #map.zoom-md  .prop-pin   { transform: scale(.70); }
+    #map.zoom-lg  .prop-pin   { transform: scale(.85); }
+    /* zoom-xl  — full size (no transform) */
+
+    #map.zoom-xs  .survey-pin { transform: scale(.28); }
+    #map.zoom-sm  .survey-pin { transform: scale(.48); }
+    #map.zoom-md  .survey-pin { transform: scale(.68); }
+    #map.zoom-lg  .survey-pin { transform: scale(.85); }
+
     .leaflet-popup-content-wrapper {
       background: var(--sidebar-bg); color: var(--text);
       border: 1px solid var(--border); border-radius: 8px;
@@ -632,6 +649,12 @@
           <button class="layer-expand-btn" id="survey-expand-btn" title="Show individual surveys">▸</button>
         </div>
         <div class="layer-sub" id="survey-sub-options"></div>
+        <label class="layer-toggle enabled">
+          <input type="checkbox" checked data-layer="roads" /> Roads &amp; Highways
+        </label>
+        <label class="layer-toggle enabled">
+          <input type="checkbox" checked data-layer="boundaries" /> Boundaries &amp; Cities
+        </label>
       </div>
     </div>
     <div id="map"></div>
@@ -798,10 +821,47 @@ document.getElementById("btn-share").addEventListener("click", () => {
 
 // ── MAP INIT ──────────────────────────────────────────────────────────────────
 const map = L.map("map", { zoomControl: true }).setView([37.5, -96], 4);
+
+// Base — satellite imagery
 L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 }
 ).addTo(map);
+
+// Overlay 1 — roads & highways (Esri Transportation reference layer)
+const roadOverlay = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}",
+  { maxZoom: 19, opacity: 0.25, pane: "overlayPane" }
+).addTo(map);
+
+// Overlay 2 — city labels, state & country boundaries
+const boundaryOverlay = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+  { maxZoom: 19, opacity: 0.35, pane: "overlayPane" }
+).addTo(map);
+
+// ── ZOOM-RESPONSIVE PINS + OVERLAY INTENSITY ──────────────────────────────────
+const ZOOM_CLASSES = ["zoom-xs","zoom-sm","zoom-md","zoom-lg","zoom-xl"];
+
+function updateZoom() {
+  const z = map.getZoom();
+  const el = document.getElementById("map");
+  ZOOM_CLASSES.forEach(c => el.classList.remove(c));
+  if      (z <= 4)  el.classList.add("zoom-xs");
+  else if (z <= 6)  el.classList.add("zoom-sm");
+  else if (z <= 9)  el.classList.add("zoom-md");
+  else if (z <= 12) el.classList.add("zoom-lg");
+  else              el.classList.add("zoom-xl");
+
+  // Overlays grow more opaque as you zoom in
+  const ro = Math.min(0.90, 0.20 + (z - 3) * 0.065);
+  const bo = Math.min(0.95, 0.30 + (z - 3) * 0.060);
+  if (roadOverlay._map)     roadOverlay.setOpacity(Math.max(0.10, ro));
+  if (boundaryOverlay._map) boundaryOverlay.setOpacity(Math.max(0.20, bo));
+}
+
+map.on("zoomend", updateZoom);
+map.whenReady(updateZoom);
 
 map.on("mousemove", e => {
   document.getElementById("statusbar").textContent =
@@ -847,6 +907,12 @@ document.getElementById("layer-panel").addEventListener("change", e => {
   const cb = e.target; if (!cb.dataset.layer) return;
   if (cb.dataset.layer === "surveys") {
     Object.keys(allSurveys).forEach(name => toggleSurveySheet(name, cb.checked));
+  } else if (cb.dataset.layer === "roads") {
+    cb.checked ? roadOverlay.addTo(map) : map.removeLayer(roadOverlay);
+    cb.closest(".layer-toggle").classList.toggle("enabled", cb.checked);
+  } else if (cb.dataset.layer === "boundaries") {
+    cb.checked ? boundaryOverlay.addTo(map) : map.removeLayer(boundaryOverlay);
+    cb.closest(".layer-toggle").classList.toggle("enabled", cb.checked);
   } else {
     const layer = LAYERS[cb.dataset.layer];
     if (layer) { cb.checked ? layer.addTo(map) : map.removeLayer(layer); }
@@ -896,7 +962,7 @@ function makeIcon(color) {
     <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"
           fill="${color}" stroke="rgba(0,0,0,.4)" stroke-width="1.5"/>
     <circle cx="12" cy="12" r="5" fill="white" opacity=".9"/></svg>`;
-  return L.divIcon({ html: svg, className: "", iconSize: [24,32], iconAnchor: [12,32], popupAnchor: [0,-34] });
+  return L.divIcon({ html: svg, className: "prop-pin", iconSize: [24,32], iconAnchor: [12,32], popupAnchor: [0,-34] });
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────────────────────
@@ -1197,7 +1263,7 @@ function makeSurveyIcon(order, rank) {
     <text x="16" y="21" text-anchor="middle" font-size="${fs}" font-weight="700"
           fill="white" font-family="system-ui,sans-serif">${num}</text>
   </svg>`;
-  return L.divIcon({ html: svg, className: "", iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20] });
+  return L.divIcon({ html: svg, className: "survey-pin", iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20] });
 }
 
 function renderSurveyList() {
