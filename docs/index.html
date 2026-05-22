@@ -139,22 +139,77 @@
     ══════════════════════════════════════════════════════════════════════════ */
     #view-map { flex-direction: row; }
 
-    /* Sidebar */
+    /* Sidebar shell */
     #sidebar {
       width: 320px; min-width: 280px;
       background: var(--sidebar-bg);
       display: flex; flex-direction: column;
       border-right: 1px solid var(--border);
-      z-index: 1000;
+      z-index: 1000; overflow: hidden;
+      position: relative;
     }
 
-    #sidebar-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+    /* ── Sidebar page system ────────────────────────────────────────────────── */
+    .sidebar-page {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      background: var(--sidebar-bg);
+      transition: transform .25s cubic-bezier(.4,0,.2,1), opacity .2s;
     }
+    .sidebar-page.sp-hidden {
+      transform: translateX(100%); opacity: 0; pointer-events: none;
+    }
+    #sidebar-home.sp-hidden  { transform: translateX(-30%); }
 
-    #last-updated { font-size: .7rem; color: var(--muted); margin-bottom: 8px; }
+    /* ── Home page ─────────────────────────────────────────────────────────── */
+    .sidebar-home-hdr {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    #last-updated { font-size: .7rem; color: var(--muted); }
 
+    .sidebar-nav-cards { padding: 12px 10px 4px; flex-shrink: 0; }
+
+    .sidebar-nav-card {
+      width: 100%; margin-bottom: 8px;
+      padding: 15px 16px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 11px; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      color: var(--text); text-align: left;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .sidebar-nav-card:hover {
+      border-color: var(--sa-red);
+      background: var(--card-hover);
+      box-shadow: 0 0 0 1px var(--sa-red-glow);
+    }
+    .sidebar-nav-icon {
+      width: 46px; height: 46px; flex-shrink: 0;
+      background: var(--sa-red-dim); border: 1px solid var(--sa-red-glow);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--sa-red);
+    }
+    .sidebar-nav-icon svg { width: 22px; height: 22px; }
+    .sidebar-nav-label h3 { font-size: .9rem; font-weight: 700; }
+    .sidebar-nav-label p  { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+    .sidebar-nav-chevron  { margin-left: auto; color: var(--dim); font-size: 1.2rem; font-weight: 300; }
+
+    /* ── Portfolio sub-page ─────────────────────────────────────────────────── */
+    .sidebar-back-btn {
+      display: flex; align-items: center; gap: 7px;
+      background: none; border: none; border-bottom: 1px solid var(--border);
+      cursor: pointer; color: var(--muted); font-size: .78rem; font-weight: 600;
+      padding: 10px 14px; width: 100%; text-align: left;
+      transition: color .15s, background .15s; flex-shrink: 0;
+    }
+    .sidebar-back-btn:hover { color: var(--text); background: var(--card-hover); }
+    .sidebar-back-btn svg  { width: 14px; height: 14px; }
+
+    #portfolio-search {
+      padding: 10px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
     #search {
       width: 100%; padding: 7px 10px; border-radius: 6px;
       border: 1px solid var(--border); background: var(--bg);
@@ -614,48 +669,87 @@
   <!-- MAP VIEW -->
   <div id="view-map" class="view active">
     <div id="sidebar">
-      <div id="sidebar-header">
-        <p id="last-updated">Loading…</p>
-        <input id="search" type="text" placeholder="Search name, address, deal type…" />
-      </div>
-      <div id="filters">
-        <div class="chip active" data-type="all">All</div>
-        <!-- deal-type chips injected dynamically -->
-      </div>
-      <!-- Per-sheet survey chips — populated dynamically when surveys.json loads -->
-      <div id="survey-filter"></div>
 
-      <!-- Survey sites — shown at top when chip is active -->
-      <div id="survey-section">
-        <div class="survey-section-header">
-          <span>&#9679; Survey Sites</span>
-          <span id="survey-count"></span>
+      <!-- ══ HOME PAGE ══════════════════════════════════════════════════════ -->
+      <div id="sidebar-home" class="sidebar-page">
+        <div class="sidebar-home-hdr">
+          <p id="last-updated">Loading…</p>
         </div>
-        <div id="survey-list"></div>
-      </div>
 
-      <div id="property-list"></div>
-      <div id="count"></div>
+        <div class="sidebar-nav-cards">
+          <!-- Portfolio -->
+          <button class="sidebar-nav-card" id="nav-portfolio">
+            <div class="sidebar-nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </div>
+            <div class="sidebar-nav-label">
+              <h3>Portfolio</h3>
+              <p id="portfolio-count">Loading…</p>
+            </div>
+            <span class="sidebar-nav-chevron">›</span>
+          </button>
+        </div>
 
-      <div id="layer-panel">
-        <h2>Layers</h2>
-        <label class="layer-toggle enabled">
-          <input type="checkbox" checked data-layer="properties" /> Properties
-        </label>
-        <div class="layer-row">
-          <label class="layer-toggle" id="survey-master-toggle">
-            <input type="checkbox" data-layer="surveys" /> Survey Sites
+        <div style="flex:1"></div>
+
+        <!-- Layer panel lives on Home so it's always reachable -->
+        <div id="layer-panel">
+          <h2>Layers</h2>
+          <label class="layer-toggle enabled">
+            <input type="checkbox" checked data-layer="properties" /> Properties
           </label>
-          <button class="layer-expand-btn" id="survey-expand-btn" title="Show individual surveys">▸</button>
+          <div class="layer-row">
+            <label class="layer-toggle" id="survey-master-toggle">
+              <input type="checkbox" data-layer="surveys" /> Survey Sites
+            </label>
+            <button class="layer-expand-btn" id="survey-expand-btn" title="Show individual surveys">▸</button>
+          </div>
+          <div class="layer-sub" id="survey-sub-options"></div>
+          <label class="layer-toggle enabled">
+            <input type="checkbox" checked data-layer="roads" /> Roads &amp; Highways
+          </label>
+          <label class="layer-toggle enabled">
+            <input type="checkbox" checked data-layer="boundaries" /> Boundaries &amp; Cities
+          </label>
         </div>
-        <div class="layer-sub" id="survey-sub-options"></div>
-        <label class="layer-toggle enabled">
-          <input type="checkbox" checked data-layer="roads" /> Roads &amp; Highways
-        </label>
-        <label class="layer-toggle enabled">
-          <input type="checkbox" checked data-layer="boundaries" /> Boundaries &amp; Cities
-        </label>
       </div>
+
+      <!-- ══ PORTFOLIO PAGE ═════════════════════════════════════════════════ -->
+      <div id="sidebar-portfolio" class="sidebar-page sp-hidden">
+        <button class="sidebar-back-btn" id="sidebar-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Home
+        </button>
+
+        <div id="portfolio-search">
+          <input id="search" type="text" placeholder="Search name, address, deal type…" />
+        </div>
+
+        <div id="filters">
+          <div class="chip active" data-type="all">All</div>
+        </div>
+
+        <!-- Per-sheet survey chips -->
+        <div id="survey-filter"></div>
+
+        <!-- Survey sites list -->
+        <div id="survey-section">
+          <div class="survey-section-header">
+            <span>&#9679; Survey Sites</span>
+            <span id="survey-count"></span>
+          </div>
+          <div id="survey-list"></div>
+        </div>
+
+        <div id="property-list"></div>
+        <div id="count"></div>
+      </div>
+
     </div>
     <div id="map"></div>
   </div>
@@ -772,6 +866,14 @@ function showToast(msg) {
   t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 2200);
 }
+
+// ── SIDEBAR PAGE NAV ─────────────────────────────────────────────────────────
+function showSidebarPage(name) {
+  document.querySelectorAll(".sidebar-page").forEach(p => p.classList.add("sp-hidden"));
+  document.getElementById("sidebar-" + name).classList.remove("sp-hidden");
+}
+document.getElementById("nav-portfolio").addEventListener("click", () => showSidebarPage("portfolio"));
+document.getElementById("sidebar-back").addEventListener("click",  () => showSidebarPage("home"));
 
 // ── PAGE NAV ──────────────────────────────────────────────────────────────────
 document.querySelectorAll(".nav-btn").forEach(btn => {
@@ -989,6 +1091,10 @@ function renderList(props) {
   });
   document.getElementById("count").textContent =
     `${props.length} propert${props.length===1?"y":"ies"}`;
+  // Keep home-page portfolio card subtitle in sync
+  const total = allProperties.length;
+  document.getElementById("portfolio-count").textContent =
+    `${total} location${total !== 1 ? "s" : ""}`;
 }
 
 function selectProperty(id) {
