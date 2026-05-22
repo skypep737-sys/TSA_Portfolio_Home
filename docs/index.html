@@ -196,6 +196,66 @@
     .sidebar-nav-label p  { font-size: .72rem; color: var(--muted); margin-top: 3px; }
     .sidebar-nav-chevron  { margin-left: auto; color: var(--dim); font-size: 1.2rem; font-weight: 300; }
 
+    /* Active Deals card — orange accent */
+    .sidebar-nav-card.deals-card .sidebar-nav-icon {
+      background: rgba(249,115,22,.12); border-color: rgba(249,115,22,.35); color: #f97316;
+    }
+    .sidebar-nav-card.deals-card:hover { border-color: #f97316; box-shadow: 0 0 0 1px rgba(249,115,22,.3); }
+
+    /* Survey card — green accent */
+    .sidebar-nav-card.survey-nav-card .sidebar-nav-icon {
+      background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.35); color: #22c55e;
+    }
+    .sidebar-nav-card.survey-nav-card:hover { border-color: #22c55e; box-shadow: 0 0 0 1px rgba(34,197,94,.25); }
+
+    /* ── Sub-page header ───────────────────────────────────────────────────── */
+    .sidebar-subpage-hdr {
+      padding: 11px 16px 10px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-subpage-hdr h3 { font-size: .88rem; font-weight: 700; }
+    .sidebar-subpage-hdr .hdr-count {
+      font-size: .7rem; padding: 2px 9px; border-radius: 999px;
+      background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+    }
+
+    /* ── Option cards (deal types / survey sheets) ─────────────────────────── */
+    .sidebar-options-scroll { flex: 1; overflow-y: auto; padding: 10px; }
+    .sidebar-options-scroll::-webkit-scrollbar { width: 5px; }
+    .sidebar-options-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .sidebar-option-card {
+      width: 100%; margin-bottom: 8px; padding: 13px 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 9px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      color: var(--text); text-align: left;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .sidebar-option-card:hover {
+      background: var(--card-hover);
+      border-color: var(--option-color, var(--sa-red));
+    }
+    .sidebar-option-card.active {
+      border-color: var(--option-color, var(--sa-red));
+      background: color-mix(in srgb, var(--option-color, var(--sa-red)) 10%, var(--bg));
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--option-color, var(--sa-red)) 30%, transparent);
+    }
+    .option-dot {
+      width: 38px; height: 38px; flex-shrink: 0; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      background: color-mix(in srgb, var(--option-color, var(--sa-red)) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--option-color, var(--sa-red)) 35%, transparent);
+      color: var(--option-color, var(--sa-red));
+    }
+    .option-dot svg { width: 18px; height: 18px; }
+    .option-text { flex: 1; }
+    .option-label { font-size: .85rem; font-weight: 600; }
+    .option-sub   { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .option-check { color: var(--option-color, var(--sa-red)); font-size: .95rem; opacity: 0; transition: opacity .15s; }
+    .sidebar-option-card.active .option-check { opacity: 1; }
+
     /* ── Portfolio sub-page ─────────────────────────────────────────────────── */
     .sidebar-back-btn {
       display: flex; align-items: center; gap: 7px;
@@ -691,6 +751,37 @@
             </div>
             <span class="sidebar-nav-chevron">›</span>
           </button>
+
+          <!-- Active Deals -->
+          <button class="sidebar-nav-card deals-card" id="nav-deals-sidebar">
+            <div class="sidebar-nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
+              </svg>
+            </div>
+            <div class="sidebar-nav-label">
+              <h3>Active Deals</h3>
+              <p id="deals-nav-count">Loading…</p>
+            </div>
+            <span class="sidebar-nav-chevron">›</span>
+          </button>
+
+          <!-- Survey -->
+          <button class="sidebar-nav-card survey-nav-card" id="nav-survey-sidebar">
+            <div class="sidebar-nav-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </div>
+            <div class="sidebar-nav-label">
+              <h3>Survey Sites</h3>
+              <p id="survey-nav-count">Loading…</p>
+            </div>
+            <span class="sidebar-nav-chevron">›</span>
+          </button>
         </div>
 
         <div style="flex:1"></div>
@@ -748,6 +839,36 @@
 
         <div id="property-list"></div>
         <div id="count"></div>
+      </div>
+
+      <!-- ══ ACTIVE DEALS PAGE ═════════════════════════════════════════════ -->
+      <div id="sidebar-deals-nav" class="sidebar-page sp-hidden">
+        <button class="sidebar-back-btn" id="sidebar-deals-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Home
+        </button>
+        <div class="sidebar-subpage-hdr">
+          <h3>Active Deals</h3>
+          <span class="hdr-count" id="deals-nav-total">—</span>
+        </div>
+        <div class="sidebar-options-scroll" id="deals-options"></div>
+      </div>
+
+      <!-- ══ SURVEY NAV PAGE ═══════════════════════════════════════════════ -->
+      <div id="sidebar-survey-nav" class="sidebar-page sp-hidden">
+        <button class="sidebar-back-btn" id="sidebar-survey-nav-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Home
+        </button>
+        <div class="sidebar-subpage-hdr">
+          <h3>Survey Sites</h3>
+          <span class="hdr-count" id="survey-nav-total">—</span>
+        </div>
+        <div class="sidebar-options-scroll" id="survey-nav-options"></div>
       </div>
 
     </div>
@@ -872,8 +993,12 @@ function showSidebarPage(name) {
   document.querySelectorAll(".sidebar-page").forEach(p => p.classList.add("sp-hidden"));
   document.getElementById("sidebar-" + name).classList.remove("sp-hidden");
 }
-document.getElementById("nav-portfolio").addEventListener("click", () => showSidebarPage("portfolio"));
-document.getElementById("sidebar-back").addEventListener("click",  () => showSidebarPage("home"));
+document.getElementById("nav-portfolio").addEventListener("click",     () => showSidebarPage("portfolio"));
+document.getElementById("sidebar-back").addEventListener("click",          () => showSidebarPage("home"));
+document.getElementById("nav-deals-sidebar").addEventListener("click",    () => showSidebarPage("deals-nav"));
+document.getElementById("sidebar-deals-back").addEventListener("click",   () => showSidebarPage("home"));
+document.getElementById("nav-survey-sidebar").addEventListener("click",   () => showSidebarPage("survey-nav"));
+document.getElementById("sidebar-survey-nav-back").addEventListener("click", () => showSidebarPage("home"));
 
 // ── PAGE NAV ──────────────────────────────────────────────────────────────────
 document.querySelectorAll(".nav-btn").forEach(btn => {
@@ -989,6 +1114,10 @@ function syncSurveyUI() {
   const total = Object.keys(allSurveys).length;
   // Sidebar sheet chips
   document.querySelectorAll(".survey-sheet-chip").forEach(c =>
+    c.classList.toggle("active", activeSurveys.has(c.dataset.sheet))
+  );
+  // Survey nav page cards
+  document.querySelectorAll(".survey-option-card").forEach(c =>
     c.classList.toggle("active", activeSurveys.has(c.dataset.sheet))
   );
   // Layer sub-checkboxes
@@ -1351,6 +1480,110 @@ document.getElementById("deals-search").addEventListener("input", e => {
   renderDealsTable();
 });
 
+// ── DEAL TYPE NAV CARDS ───────────────────────────────────────────────────────
+const DEAL_TYPES_CONFIG = [
+  { key: "all",     label: "All Deals", color: "#EE2A24",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>` },
+  { key: "Renewal", label: "Renewal",   color: "#f97316",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>` },
+  { key: "Newlo",   label: "Newlo",     color: "#eab308",
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>` },
+];
+
+function renderDealTypeCards() {
+  const container = document.getElementById("deals-options");
+  if (!container) return;
+  const deals = activeDeals();
+  container.innerHTML = "";
+
+  DEAL_TYPES_CONFIG.forEach(t => {
+    const count = t.key === "all"
+      ? deals.length
+      : deals.filter(p => (p.deal_type||"").trim() === t.key).length;
+    if (t.key !== "all" && count === 0) return;
+
+    const card = document.createElement("button");
+    card.className = "sidebar-option-card" + (activeType === t.key ? " active" : "");
+    card.style.setProperty("--option-color", t.color);
+    card.dataset.dealKey = t.key;
+    card.innerHTML = `
+      <div class="option-dot">${t.icon}</div>
+      <div class="option-text">
+        <div class="option-label">${t.label}</div>
+        <div class="option-sub">${count} deal${count !== 1 ? "s" : ""}</div>
+      </div>
+      <span class="option-check">✓</span>`;
+    card.addEventListener("click", () => {
+      activeType = t.key;
+      // Sync portfolio chip
+      document.querySelectorAll("#filters .chip").forEach(c => {
+        c.classList.toggle("active", c.dataset.type === t.key);
+      });
+      refreshSidebar();
+      showSidebarPage("portfolio");
+      // Mark active card
+      container.querySelectorAll(".sidebar-option-card").forEach(c =>
+        c.classList.toggle("active", c.dataset.dealKey === t.key)
+      );
+    });
+    container.appendChild(card);
+  });
+
+  // Update home-page nav card subtitle + sub-page header count
+  const el1 = document.getElementById("deals-nav-count");
+  const el2 = document.getElementById("deals-nav-total");
+  const label = `${deals.length} deal${deals.length !== 1 ? "s" : ""}`;
+  if (el1) el1.textContent = label;
+  if (el2) el2.textContent = label;
+}
+
+// ── SURVEY NAV CARDS ──────────────────────────────────────────────────────────
+function renderSurveyNavCards() {
+  const container = document.getElementById("survey-nav-options");
+  if (!container) return;
+  container.innerHTML = "";
+  const sheets = Object.keys(allSurveys);
+
+  if (!sheets.length) {
+    container.innerHTML = `<div style="padding:20px 16px;font-size:.82rem;color:var(--muted)">No survey data loaded.</div>`;
+  }
+
+  sheets.forEach(name => {
+    const rows   = allSurveys[name];
+    const isOn   = activeSurveys.has(name);
+
+    const card = document.createElement("button");
+    card.className = "sidebar-option-card survey-option-card" + (isOn ? " active" : "");
+    card.style.setProperty("--option-color", "#22c55e");
+    card.dataset.sheet = name;
+    card.innerHTML = `
+      <div class="option-dot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+      <div class="option-text">
+        <div class="option-label">${name}</div>
+        <div class="option-sub">${rows.length} site${rows.length !== 1 ? "s" : ""}</div>
+      </div>
+      <span class="option-check">✓</span>`;
+    card.addEventListener("click", () => {
+      const nowOn = !activeSurveys.has(name);
+      toggleSurveySheet(name, nowOn);
+      card.classList.toggle("active", nowOn);
+    });
+    container.appendChild(card);
+  });
+
+  // Update home-page nav card subtitle + sub-page header count
+  const total = sheets.reduce((s, n) => s + allSurveys[n].length, 0);
+  const label = `${total} site${total !== 1 ? "s" : ""}`;
+  const el1 = document.getElementById("survey-nav-count");
+  const el2 = document.getElementById("survey-nav-total");
+  if (el1) el1.textContent = label;
+  if (el2) el2.textContent = label;
+}
+
 // ── SURVEY LAYER ─────────────────────────────────────────────────────────────
 function surveyNum(order) {
   const n = parseFloat(order);
@@ -1473,6 +1706,7 @@ async function loadSurveys() {
     renderSurveySubOptions();
     renderSurveyTabs();
     renderSurveyList();
+    renderSurveyNavCards();
   } catch (err) {
     console.log("No survey data:", err.message);
   }
@@ -1517,6 +1751,7 @@ async function loadData() {
     registerLayer("properties", markerLayer);
     buildChips(properties);
     refreshSidebar();
+    renderDealTypeCards();
 
     const coords = properties.filter(p => p.lat && p.lng).map(p => [p.lat, p.lng]);
     if (coords.length) map.fitBounds(coords, { padding: [40, 40] });
