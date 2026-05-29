@@ -3,49 +3,25 @@ import json
 import time
 import requests
 
-# ── CONFIG ────────────────────────────────────────────────────────────────────
-# Update these to exactly match your Smartsheet column headers.
-COLUMN_MAP = {
-    "site_id":          "SITE ID",
-    "store_name":       "Store Name",
-    "deal_type":        "Deal Type",
-    "full_address":     "Full Address",
-    "street":           "Address",
-    "city":             "City",
-    "state":            "State",
-    "zip":              "Zip",
-    "drumline":         "Drumline",
-    "gross_sales_rank": "Gross Sales Rank",
-    "deal_status":      "Deal Status",
-    "deal_notes":       "Latest Comment",
-}
+# ── CLIENT CONFIG ─────────────────────────────────────────────────────────────
+# Column mappings live in client-config.json — edit that file per client.
+# Do not hardcode column names here.
+
+_CONFIG_FILE = "client-config.json"
+if not os.path.exists(_CONFIG_FILE):
+    raise FileNotFoundError(
+        f"Missing {_CONFIG_FILE}. Copy the template and update the "
+        "Smartsheet column headers for your client."
+    )
+with open(_CONFIG_FILE) as _f:
+    _CLIENT = json.load(_f)
+
+COLUMN_MAP        = _CLIENT["column_map"]
+SURVEY_COLUMN_MAP = _CLIENT["survey_column_map"]
 
 CACHE_FILE    = "geocode_cache.json"
 OUTPUT_FILE   = "docs/properties.json"
 SURVEY_OUTPUT = "docs/surveys.json"
-
-# Survey sheet column headers — must match your Smartsheet exactly.
-SURVEY_COLUMN_MAP = {
-    "survey_order":   "Survey Order",
-    "rank":           "Rank",
-    "street":         "Address",
-    "city":           "City",
-    "state":          "State",
-    "zip":            "Zip",
-    "submarket":      "Submarket",
-    "available_sqft": "Available SQFT",
-    "base_rent":      "Base Rent",
-    "opx":            "Opx",
-    "site_notes":     "Site Notes",
-    "as_built":       "As-Built (former Use)",
-    "photo_link":     "Photo Link",
-    "flyer_link":     "Flyer Link",
-    "broker":         "Broker",
-    "broker_email":   "Broker Email",
-    "phone":          "Phone",
-    "lng":            "Long",
-    "lat":            "Lat",
-}
 
 # ── SMARTSHEET ────────────────────────────────────────────────────────────────
 

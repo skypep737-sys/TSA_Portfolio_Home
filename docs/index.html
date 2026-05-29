@@ -7,6 +7,8 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Client config — edit client.js to rebrand for a new client -->
+  <script src="client.js"></script>
 
   <style>
     /* ── Brand tokens ─────────────────────────────────────────────────────── */
@@ -655,6 +657,22 @@
       background: var(--border); color: var(--muted); pointer-events: none;
     }
   </style>
+
+  <!-- Apply client branding: CSS variables + page title -->
+  <script>
+    (function () {
+      var cfg = CLIENT_CONFIG;
+      var hex = cfg.primaryColor;
+      var r = parseInt(hex.slice(1,3),16);
+      var g = parseInt(hex.slice(3,5),16);
+      var b = parseInt(hex.slice(5,7),16);
+      var root = document.documentElement;
+      root.style.setProperty("--sa-red",      hex);
+      root.style.setProperty("--sa-red-dim",  "rgba("+r+","+g+","+b+",.15)");
+      root.style.setProperty("--sa-red-glow", "rgba("+r+","+g+","+b+",.35)");
+      document.title = cfg.pageTitle;
+    })();
+  </script>
 </head>
 <body>
 
@@ -663,10 +681,10 @@
 ══════════════════════════════════════════════════════════════════════════ -->
 <div id="header">
 
-  <!-- Brand -->
+  <!-- Brand (text set from client.js) -->
   <div class="header-brand">
-    <div class="header-shield">S</div>
-    <span>Salvation Army</span>
+    <div class="header-shield" id="brand-letter"></div>
+    <span id="brand-name"></span>
   </div>
 
   <div class="header-divider"></div>
@@ -882,11 +900,8 @@
       <span class="deal-count" id="deal-count">— deals</span>
       <input class="deals-search" id="deals-search" type="text" placeholder="Search deals…" />
     </div>
-    <div class="deals-filter-row" id="deals-filters">
-      <div class="deal-chip active" data-deal-type="all">All</div>
-      <div class="deal-chip" data-deal-type="Renewal" style="--chip-color:#f97316">&#9679; Renewal</div>
-      <div class="deal-chip" data-deal-type="Newlo"   style="--chip-color:#eab308">&#9679; Newlo</div>
-    </div>
+    <!-- Deal type filter chips — built dynamically from client.js dealTypes -->
+    <div class="deals-filter-row" id="deals-filters"></div>
     <div class="table-wrap">
       <table id="deals-table">
         <thead>
@@ -971,14 +986,50 @@
 <div id="toast"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
+// ── CONFIG (from client.js) ───────────────────────────────────────────────────
 const DATA_URL = "properties.json";
 
-const DEAL_COLORS = {
-  default:   "#EE2A24",   // SA red
-  "Renewal": "#f97316",   // orange
-  "Newlo":   "#eab308",   // yellow
-};
+// Build DEAL_COLORS from client config — { default: primaryColor, TypeA: colorA, … }
+const DEAL_COLORS = Object.assign(
+  { default: CLIENT_CONFIG.primaryColor },
+  Object.fromEntries(CLIENT_CONFIG.dealTypes.map(t => [t.key, t.color]))
+);
+
+// Tag icon used for individual deal type cards
+const _TAG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+const _GRID_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>`;
+
+// Deal type cards for the sidebar Active Deals sub-page
+const DEAL_TYPES_CONFIG = [
+  { key: "all", label: "All Deals", color: CLIENT_CONFIG.primaryColor, icon: _GRID_ICON },
+  ...CLIENT_CONFIG.dealTypes.map(t => ({ key: t.key, label: t.label, color: t.color, icon: _TAG_ICON })),
+];
+
+// ── BRAND INIT ────────────────────────────────────────────────────────────────
+document.getElementById("brand-letter").textContent = CLIENT_CONFIG.brandLetter;
+document.getElementById("brand-name").textContent   = CLIENT_CONFIG.appName;
+
+// ── DEAL CHIPS (Deal View filter row) ─────────────────────────────────────────
+function buildDealChips() {
+  const container = document.getElementById("deals-filters");
+  container.innerHTML = "";
+  // "All" chip
+  const allChip = document.createElement("div");
+  allChip.className = "deal-chip active";
+  allChip.dataset.dealType = "all";
+  allChip.textContent = "All";
+  container.appendChild(allChip);
+  // One chip per deal type from config
+  CLIENT_CONFIG.dealTypes.forEach(t => {
+    const chip = document.createElement("div");
+    chip.className = "deal-chip";
+    chip.dataset.dealType = t.key;
+    chip.style.setProperty("--chip-color", t.color);
+    chip.textContent = "● " + t.label;
+    container.appendChild(chip);
+  });
+}
+buildDealChips();
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg) {
@@ -1047,7 +1098,7 @@ document.getElementById("btn-share").addEventListener("click", () => {
 });
 
 // ── MAP INIT ──────────────────────────────────────────────────────────────────
-const map = L.map("map", { zoomControl: true }).setView([37.5, -96], 4);
+const map = L.map("map", { zoomControl: true }).setView(CLIENT_CONFIG.mapCenter, CLIENT_CONFIG.mapZoom);
 
 // Base — satellite imagery
 L.tileLayer(
