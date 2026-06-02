@@ -463,6 +463,41 @@
     #map.zoom-md  .survey-pin { transform: scale(.68); }
     #map.zoom-lg  .survey-pin { transform: scale(.85); }
 
+    /* ── Distance tool button (Leaflet control) ────────────────────────────── */
+    .distance-ctrl-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 13px; border-radius: 7px;
+      background: var(--sidebar-bg); border: 1px solid var(--border);
+      color: var(--muted); font-size: .78rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,.5);
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .distance-ctrl-btn:hover { border-color: #3b82f6; color: var(--text); }
+    .distance-ctrl-btn.active {
+      background: #1e3a5f; border-color: #3b82f6; color: #60a5fa;
+    }
+    .distance-ctrl-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* Distance result popup */
+    .distance-popup .leaflet-popup-content-wrapper {
+      background: #0b1120; border: 1px solid #3b82f6;
+      border-radius: 8px; padding: 0;
+    }
+    .distance-popup .leaflet-popup-tip { background: #0b1120; }
+    .distance-popup-body {
+      padding: 9px 14px; text-align: center;
+    }
+    .distance-popup-body .dist-miles {
+      font-size: 1.05rem; font-weight: 800; color: #60a5fa;
+    }
+    .distance-popup-body .dist-km {
+      font-size: .75rem; color: var(--muted); margin-top: 2px;
+    }
+    .distance-popup-body .dist-hint {
+      font-size: .68rem; color: var(--dim); margin-top: 5px;
+    }
+
     .leaflet-popup-content-wrapper {
       background: var(--sidebar-bg); color: var(--text);
       border: 1px solid var(--border); border-radius: 8px;
@@ -1873,6 +1908,112 @@ async function loadData() {
       `<div style="padding:16px;color:#f77c6c;font-size:.8rem">Failed to load data.<br><small>${err.message}</small></div>`;
   }
 }
+
+// ── DISTANCE TOOL ─────────────────────────────────────────────────────────────
+(function () {
+  let active = false, points = [], markers = [], line = null, previewLine = null;
+
+  // Leaflet control — bottom right, above zoom controls
+  const DistCtrl = L.Control.extend({
+    options: { position: "bottomright" },
+    onAdd() {
+      const btn = L.DomUtil.create("button", "distance-ctrl-btn");
+      btn.id = "distance-ctrl-btn";
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="22" y2="12"/><polyline points="8 6 2 12 8 18"/><polyline points="16 6 22 12 16 18"/></svg> Distance`;
+      L.DomEvent.on(btn, "click", L.DomEvent.stopPropagation);
+      L.DomEvent.on(btn, "click", toggle);
+      return btn;
+    }
+  });
+  new DistCtrl().addTo(map);
+
+  function btn() { return document.getElementById("distance-ctrl-btn"); }
+
+  function clear() {
+    if (line)        { map.removeLayer(line);        line = null; }
+    if (previewLine) { map.removeLayer(previewLine); previewLine = null; }
+    markers.forEach(m => map.removeLayer(m));
+    markers = []; points = [];
+    map.closePopup();
+  }
+
+  function toggle() {
+    active = !active;
+    if (active) {
+      clear();
+      btn().classList.add("active");
+      map.getContainer().style.cursor = "crosshair";
+      showToast("Click two points on the map to measure distance");
+    } else {
+      clear();
+      btn().classList.remove("active");
+      map.getContainer().style.cursor = "";
+    }
+  }
+
+  // Place point markers
+  function placeMarker(latlng, label) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+      <circle cx="11" cy="11" r="9" fill="#0b1120" stroke="#3b82f6" stroke-width="2.5"/>
+      <text x="11" y="15" text-anchor="middle" font-size="10" font-weight="800" fill="#60a5fa" font-family="system-ui">${label}</text>
+    </svg>`;
+    const icon = L.divIcon({ html: svg, className: "", iconSize: [22,22], iconAnchor: [11,11] });
+    const m = L.marker(latlng, { icon, zIndexOffset: 1000 }).addTo(map);
+    markers.push(m);
+    return m;
+  }
+
+  map.on("click", function (e) {
+    if (!active) return;
+    points.push(e.latlng);
+    placeMarker(e.latlng, points.length === 1 ? "A" : "B");
+
+    if (points.length === 2) {
+      // Draw final line
+      if (previewLine) { map.removeLayer(previewLine); previewLine = null; }
+      line = L.polyline(points, { color: "#3b82f6", weight: 2, dashArray: "7 5", opacity: 0.9 }).addTo(map);
+
+      // Calculate distance
+      const meters = points[0].distanceTo(points[1]);
+      const miles  = (meters / 1609.344).toFixed(2);
+      const km     = (meters / 1000).toFixed(2);
+      const ft     = (meters * 3.28084).toFixed(0);
+
+      const mid = L.latLng(
+        (points[0].lat + points[1].lat) / 2,
+        (points[0].lng + points[1].lng) / 2
+      );
+
+      L.popup({ className: "distance-popup", closeButton: true, autoClose: false, closeOnClick: false })
+        .setLatLng(mid)
+        .setContent(`<div class="distance-popup-body">
+          <div class="dist-miles">${miles} mi</div>
+          <div class="dist-km">${km} km &nbsp;·&nbsp; ${Number(ft).toLocaleString()} ft</div>
+          <div class="dist-hint">Click Distance again to reset</div>
+        </div>`)
+        .openOn(map);
+
+      // Reset state but keep result visible
+      active = false;
+      btn().classList.remove("active");
+      map.getContainer().style.cursor = "";
+    }
+  });
+
+  // Rubber-band preview line
+  map.on("mousemove", function (e) {
+    if (!active || points.length !== 1) return;
+    if (previewLine) map.removeLayer(previewLine);
+    previewLine = L.polyline([points[0], e.latlng], {
+      color: "#3b82f6", weight: 1.5, dashArray: "4 3", opacity: 0.55
+    }).addTo(map);
+  });
+
+  // Escape to cancel
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && active) toggle();
+  });
+})();
 
 loadData();
 loadSurveys();
