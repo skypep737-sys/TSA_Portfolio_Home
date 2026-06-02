@@ -423,6 +423,21 @@
     }
     .popup-flyer-link:hover { background: var(--sa-red); color: #fff; }
 
+    /* Survey site jump dropdown inside popup */
+    .survey-jump-select {
+      width: 100%; margin-bottom: 9px;
+      padding: 5px 8px; border-radius: 5px;
+      border: 1px solid #22c55e55; background: var(--bg);
+      color: var(--text); font-size: .74rem; outline: none;
+      cursor: pointer; appearance: auto;
+    }
+    .survey-jump-select:focus { border-color: #22c55e; }
+    .survey-jump-label {
+      font-size: .67rem; font-weight: 600; color: #22c55e;
+      text-transform: uppercase; letter-spacing: .07em;
+      margin-bottom: 3px; display: block;
+    }
+
     #layer-panel { padding: 10px 16px; border-top: 1px solid var(--border); }
     #layer-panel h2 { font-size: .72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
     .layer-toggle { display: flex; align-items: center; gap: 8px; font-size: .8rem; padding: 4px 0; cursor: pointer; color: var(--muted); }
@@ -1712,6 +1727,15 @@ function selectSurvey(sheetName, order) {
   if (marker) { map.flyTo(marker.getLatLng(), 15, { duration: .8 }); marker.openPopup(); }
 }
 
+// ── SURVEY JUMP (called from popup dropdown) ─────────────────────────────────
+window.jumpToSurveySite = function(sheetName, order) {
+  const marker = surveyMarkerMaps[sheetName]?.[order];
+  if (!marker) return;
+  const z = map.getZoom();
+  map.flyTo(marker.getLatLng(), z < 13 ? 13 : z, { duration: 0.5 });
+  setTimeout(() => marker.openPopup(), 550);
+};
+
 async function loadSurveys() {
   try {
     const resp = await fetch("surveys.json?t=" + Date.now());
@@ -1743,14 +1767,24 @@ async function loadSurveys() {
         const flyerHtml = s.flyer_link
           ? `<a class="popup-flyer-link" href="${s.flyer_link}" target="_blank">📄 View Flyer</a>` : "";
 
+        // Dropdown — all sites in this survey sheet
+        const safeSheet = sheetName.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+        const dropdownOptions = surveys.map(sv =>
+          `<option value="${sv.survey_order}"${sv.survey_order === s.survey_order ? " selected" : ""}>#${surveyNum(sv.survey_order)} · ${(sv.street||"").replace(/"/g,"&quot;")}, ${sv.city||""}</option>`
+        ).join("");
+        const dropdownHtml = surveys.length > 1 ? `
+          <span class="survey-jump-label">Sites in this survey</span>
+          <select class="survey-jump-select" onchange="jumpToSurveySite('${safeSheet}', this.value)">${dropdownOptions}</select>` : "";
+
         marker.bindPopup(`
           <div class="popup-title">#${surveyNum(s.survey_order)} · ${s.street||""}, ${s.city||""}</div>
+          ${dropdownHtml}
           ${photoHtml}
           <div class="popup-row">Available SF &nbsp;<span>${s.available_sqft||"—"}</span></div>
           <div class="popup-row">Base Rent &nbsp;<span>${s.base_rent ? "$"+s.base_rent+"/SF" : "—"}</span></div>
           ${flyerHtml}
           ${s.broker ? `<div class="popup-row" style="margin-top:6px">Broker &nbsp;<span>${s.broker}</span></div>` : ""}
-        `, { maxWidth: 280 });
+        `, { maxWidth: 300 });
 
         marker.on("click", () => {
           showSidebarPage("portfolio");
