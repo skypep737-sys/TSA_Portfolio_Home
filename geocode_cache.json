@@ -418,5 +418,93 @@
   "1630 n damen ave|chicago|il|": [
     41.911395917492,
     -87.677562118286
+  ],
+  "200 east spruce avenue|inglewood|ca|90301.0": [
+    33.956984421099,
+    -118.351978004126
+  ],
+  "2754 east bell road|phoenix|az|85032.0": [
+    33.640607832366,
+    -112.023210462805
+  ],
+  "810 east dominguez street|carson|ca|90744.0": [
+    33.840477389615,
+    -118.260598480096
+  ],
+  "855 west mission avenue|escondido|ca|92025.0": [
+    33.126668469354,
+    -117.097009182492
+  ],
+  "81 - 246 state highway 111|indio|ca|92201.0": [
+    null,
+    null
+  ],
+  "2524 scottsdale road|south scottsdale|az|85257.0": [
+    33.474883525975,
+    -111.926247210984
+  ],
+  "5895 47th & stockton blvd.|sacramento|ca|95823.0": [
+    38.510508921516,
+    -121.435861846783
+  ],
+  "7715 e. main st.|mesa|az|85207.0": [
+    33.415128570633,
+    -111.667346637596
+  ],
+  "581 n. main st.|corona|ca|92880.0": [
+    33.887635676359,
+    -117.564456162458
+  ],
+  "30085 industrial pkwy. sw|union city|ca|94587.0": [
+    null,
+    null
+  ],
+  "7030 south cicero avenue|chicago|il|60638.0": [
+    41.766387923524,
+    -87.742166315002
+  ],
+  "6811 west grand avenue|chicago|il|60707.0": [
+    41.923534559587,
+    -87.795670906764
+  ],
+  "2600 north avenue|melrose park|il|60160.0": [
+    null,
+    null
+  ],
+  "2730 story road|san jose|ca|95127.0": [
+    37.351211310245,
+    -121.826340550381
+  ],
+  "21610 cicero avenue|matteson|il|60443.0": [
+    41.50325116989,
+    -87.732525261442
+  ],
+  "1824 west jefferson st|joliet|il|60435.0": [
+    41.52256454521,
+    -88.125182372412
+  ],
+  "14845 east 14th street|san leandro|ca|94578.0": [
+    37.707699532123,
+    -122.132236831022
+  ],
+  "1315 pacific coast hwy|harbor city|ca|90710.0": [
+    33.78952532046,
+    -118.299620676886
+  ],
+  "12th avenue & lacey blvd|hanford|ca|93230.0": [
+    36.328008994877,
+    -119.672969369548
+  ],
+  "4441 genesee ave|san diego|ca|92117.0": [
+    32.823516090247,
+    -117.184586993204
+  ],
+  "160 north barrington rd|streamwood|il|60107.0": [
+    42.035726637483,
+    -88.144730312583
+  ],
+  "17811 colima rd|rowland heights|ca|91748.0": [
+    33.990510510522,
+    -117.922825499517
   ]
 }
