@@ -361,6 +361,7 @@
     .prop-card:hover  { background: var(--card-hover); }
     .prop-card.active { background: var(--card-active); border-left-color: var(--sa-red); }
     .prop-name  { font-size: .85rem; font-weight: 500; }
+    .prop-id    { color: var(--sa-red); font-weight: 700; }
     .prop-meta  { font-size: .72rem; color: var(--muted); margin-top: 2px; }
     .prop-badge {
       display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px;
@@ -456,6 +457,9 @@
     .popup-title { font-weight: 700; font-size: .9rem; margin-bottom: 6px; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
     .popup-row   { font-size: .78rem; color: var(--muted); margin-top: 4px; }
     .popup-row span { color: var(--text); }
+    .popup-more { margin-top: 10px; width: 100%; background: var(--sa-red); color: #fff; border: none; border-radius: 6px; padding: 6px 8px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+    .popup-more:hover { filter: brightness(1.12); }
+    tr.row-highlight > td { background: var(--sa-red-dim) !important; transition: background .3s ease; }
 
     #statusbar {
       position: fixed; bottom: 8px; right: 8px;
@@ -820,9 +824,6 @@
           <label class="layer-toggle enabled">
             <input type="checkbox" checked data-layer="roads" /> Roads &amp; Highways
           </label>
-          <label class="layer-toggle enabled">
-            <input type="checkbox" checked data-layer="boundaries" /> Boundaries &amp; Cities
-          </label>
         </div>
       </div>
 
@@ -906,13 +907,12 @@
       <table id="deals-table">
         <thead>
           <tr>
+            <th data-col="site_id">Site ID <span class="sort-arrow">↕</span></th>
             <th data-col="store_name">Store Name <span class="sort-arrow">↕</span></th>
-            <th data-col="full_address">Address <span class="sort-arrow">↕</span></th>
             <th data-col="deal_type">Deal Type <span class="sort-arrow">↕</span></th>
             <th data-col="deal_status">Deal Status <span class="sort-arrow">↕</span></th>
-            <th data-col="drumline">Drumline <span class="sort-arrow">↕</span></th>
-            <th data-col="gross_sales_rank">Sales Rank <span class="sort-arrow">↕</span></th>
             <th data-col="deal_notes">Latest Notes <span class="sort-arrow">↕</span></th>
+            <th data-col="drumline">Drumline <span class="sort-arrow">↕</span></th>
           </tr>
         </thead>
         <tbody id="deals-tbody"></tbody>
@@ -1192,9 +1192,6 @@ document.getElementById("layer-panel").addEventListener("change", e => {
   } else if (cb.dataset.layer === "roads") {
     cb.checked ? roadOverlay.addTo(map) : map.removeLayer(roadOverlay);
     cb.closest(".layer-toggle").classList.toggle("enabled", cb.checked);
-  } else if (cb.dataset.layer === "boundaries") {
-    cb.checked ? boundaryOverlay.addTo(map) : map.removeLayer(boundaryOverlay);
-    cb.closest(".layer-toggle").classList.toggle("enabled", cb.checked);
   } else {
     const layer = LAYERS[cb.dataset.layer];
     if (layer) { cb.checked ? layer.addTo(map) : map.removeLayer(layer); }
@@ -1251,8 +1248,9 @@ function makeIcon(color) {
 let allProperties = [], activeType = "all", markerMap = {};
 
 function badge(type) {
+  if (!type || !String(type).trim()) return "";
   const c = colorForType(type);
-  return `<span class="prop-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${type||"—"}</span>`;
+  return `<span class="prop-badge" style="background:${c}22;color:${c};border:1px solid ${c}44">${type}</span>`;
 }
 
 function renderList(props) {
@@ -1261,10 +1259,10 @@ function renderList(props) {
   props.forEach(p => {
     const card = document.createElement("div");
     card.className = "prop-card"; card.dataset.id = p.site_id;
+    const _addr = [p.street || p.full_address, p.city, p.state].filter(Boolean).join(", ") || "—";
     card.innerHTML = `
-      <div class="prop-name">${p.store_name||"Unnamed"}</div>
-      <div class="prop-meta">${p.full_address||""}</div>
-      <div class="prop-meta">Sales Rank: ${p.gross_sales_rank||"—"}</div>
+      <div class="prop-name">${p.site_id ? `<span class="prop-id">${p.site_id}</span> · ` : ""}${p.store_name||"Unnamed"}</div>
+      <div class="prop-meta">${_addr}</div>
       ${badge(p.deal_type)}`;
     card.addEventListener("click", () => selectProperty(p.site_id));
     list.appendChild(card);
@@ -1469,7 +1467,7 @@ function renderDealsTable() {
   const q = dealSearchQ.toLowerCase();
   let rows = activeDeals().filter(p => {
     const matchType = dealTypeFilter === "all" || (p.deal_type||"").trim() === dealTypeFilter;
-    const matchQ = !q || [p.store_name, p.full_address, p.deal_type, p.deal_status, p.deal_notes]
+    const matchQ = !q || [p.store_name, p.street, p.full_address, p.deal_type, p.deal_status, p.deal_notes]
       .some(v => (v||"").toLowerCase().includes(q));
     return matchType && matchQ;
   });
@@ -1488,20 +1486,19 @@ function renderDealsTable() {
 
   const tbody = document.getElementById("deals-tbody");
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="no-deals">No active deals found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="no-deals">No active deals found</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(p => {
     const color = colorForType(p.deal_type);
-    return `<tr>
+    return `<tr data-id="${p.site_id}">
+      <td>${p.site_id||"—"}</td>
       <td><strong>${p.store_name||"—"}</strong></td>
-      <td>${p.full_address||"—"}</td>
       <td><span class="deal-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${p.deal_type||"—"}</span></td>
       <td><span class="status-badge">${p.deal_status||"—"}</span></td>
-      <td>${p.drumline||"—"}</td>
-      <td>${p.gross_sales_rank||"—"}</td>
       <td class="notes-cell" title="${(p.deal_notes||"").replace(/"/g,"&quot;")}">${p.deal_notes||"—"}</td>
+      <td>${p.drumline||"—"}</td>
     </tr>`;
   }).join("");
 
@@ -1516,6 +1513,27 @@ function renderDealsTable() {
     }
   });
 }
+
+// Jump from a map pin's "View more" to the matching row in Deal View
+function gotoDeal(siteId) {
+  const navBtn = document.querySelector('.nav-btn[data-view="deals"]');
+  if (navBtn) navBtn.click();
+  dealTypeFilter = "all";
+  document.querySelectorAll(".deal-chip").forEach(c => c.classList.toggle("active", c.dataset.dealType === "all"));
+  dealSearchQ = "";
+  const s = document.getElementById("deals-search"); if (s) s.value = "";
+  renderDealsTable();
+  requestAnimationFrame(() => {
+    const sel = (window.CSS && CSS.escape) ? CSS.escape(String(siteId)) : String(siteId);
+    const row = document.querySelector(`#deals-tbody tr[data-id="${sel}"]`);
+    if (row) {
+      document.querySelectorAll("#deals-tbody tr.row-highlight").forEach(r => r.classList.remove("row-highlight"));
+      row.classList.add("row-highlight");
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+  });
+}
+window.gotoDeal = gotoDeal;
 
 // Sort on header click
 document.querySelectorAll("#deals-table th").forEach(th => {
@@ -1532,14 +1550,7 @@ document.getElementById("deals-search").addEventListener("input", e => {
 });
 
 // ── DEAL TYPE NAV CARDS ───────────────────────────────────────────────────────
-const DEAL_TYPES_CONFIG = [
-  { key: "all",     label: "All Deals", color: "#EE2A24",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>` },
-  { key: "Renewal", label: "Renewal",   color: "#f97316",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>` },
-  { key: "Newlo",   label: "Newlo",     color: "#eab308",
-    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>` },
-];
+// Uses DEAL_TYPES_CONFIG defined above (built from CLIENT_CONFIG.dealTypes).
 
 function renderDealTypeCards() {
   const container = document.getElementById("deals-options");
@@ -1742,6 +1753,7 @@ async function loadSurveys() {
         `, { maxWidth: 280 });
 
         marker.on("click", () => {
+          showSidebarPage("portfolio");
           document.querySelectorAll(".survey-card").forEach(c => c.classList.remove("active"));
           const card = document.querySelector(`.survey-card[data-sheet="${sheetName}"][data-id="${s.survey_order}"]`);
           if (card) { card.classList.add("active"); card.scrollIntoView({ block:"nearest", behavior:"smooth" }); }
@@ -1783,16 +1795,30 @@ async function loadData() {
       if (!p.lat || !p.lng) return;
       const color = colorForType(p.deal_type);
       const marker = L.marker([p.lat, p.lng], { icon: makeIcon(color) });
+      const _addr = [p.street || p.full_address, p.city, p.state].filter(Boolean).join(", ") || "—";
+      const _moreBtn = (p.deal_type && p.deal_type.trim())
+        ? `<button class="popup-more" onclick='gotoDeal(${JSON.stringify(p.site_id)})'>View more &rarr;</button>`
+        : "";
+      const _optRow = (label, val) =>
+        (val != null && String(val).trim()) ? `<div class="popup-row">${label} &nbsp;<span>${val}</span></div>` : "";
+      const _sqft = (p.sqft != null && String(p.sqft).trim())
+        ? (isNaN(parseFloat(p.sqft)) ? p.sqft : Math.round(parseFloat(p.sqft)).toLocaleString() + " SF") : "";
+      const _rent = (p.base_rent != null && String(p.base_rent).trim())
+        ? (isNaN(parseFloat(p.base_rent)) ? p.base_rent : "$" + parseFloat(p.base_rent).toFixed(2) + "/SF") : "";
       marker.bindPopup(`
         <div class="popup-title">${p.store_name||"Unnamed"}</div>
-        <div class="popup-row">Address &nbsp;<span>${p.full_address||"—"}</span></div>
-        <div class="popup-row">Deal Type &nbsp;<span>${p.deal_type||"—"}</span></div>
+        <div class="popup-row">Address &nbsp;<span>${_addr}</span></div>
+        ${_optRow("Deal Type", p.deal_type)}
         <div class="popup-row">Drumline &nbsp;<span>${p.drumline||"—"}</span></div>
-        <div class="popup-row">Deal Notes &nbsp;<span>${p.deal_notes||"—"}</span></div>
+        ${_optRow("SQFT", _sqft)}
+        ${_optRow("Base Rent", _rent)}
+        ${_moreBtn}
       `);
       marker.on("click", () => {
+        showSidebarPage("portfolio");
+        const sel = (window.CSS && CSS.escape) ? CSS.escape(String(p.site_id)) : String(p.site_id);
         document.querySelectorAll(".prop-card").forEach(c => c.classList.remove("active"));
-        const card = document.querySelector(`.prop-card[data-id="${p.site_id}"]`);
+        const card = document.querySelector(`.prop-card[data-id="${sel}"]`);
         if (card) { card.classList.add("active"); card.scrollIntoView({ block:"nearest", behavior:"smooth" }); }
       });
       markerLayer.addLayer(marker);
