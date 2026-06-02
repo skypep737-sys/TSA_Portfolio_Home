@@ -604,9 +604,18 @@
     }
     td.notes-cell {
       color: var(--muted); font-size: .76rem;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 240px;
+      white-space: normal; overflow-wrap: anywhere; word-break: break-word;
+      line-height: 1.45; max-width: 340px;
     }
+
+    .details-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 6px; white-space: nowrap;
+      background: var(--sa-red-dim); color: #ff8f8c;
+      border: 1px solid var(--sa-red-glow); font-size: .72rem; font-weight: 600;
+      cursor: pointer; transition: background .12s, color .12s;
+    }
+    .details-btn:hover { background: var(--sa-red); color: #fff; }
 
     tbody tr { transition: background .1s; cursor: default; }
     tbody tr:hover td { background: var(--card-hover); }
@@ -709,6 +718,44 @@
     .modal-flyer-btn:hover { background: #c91f1a; transform: translateY(-1px); }
     .modal-flyer-btn.disabled {
       background: var(--border); color: var(--muted); pointer-events: none;
+    }
+
+    /* Photo placeholder shown until location photos are added */
+    .modal-photo-ph {
+      width: 100%; height: 180px; border-radius: 12px 12px 0 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; color: var(--muted); font-size: .8rem;
+      background: repeating-linear-gradient(45deg, #0e1626, #0e1626 12px, #101a2e 12px, #101a2e 24px);
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-photo-ph svg { width: 30px; height: 30px; opacity: .5; }
+
+    .modal-photo-wrap { position: relative; }
+    .view-full-photo {
+      position: absolute; bottom: 10px; right: 10px;
+      background: rgba(6,10,20,.82); color: #fff; text-decoration: none;
+      padding: 5px 11px; border-radius: 6px; font-size: .74rem; font-weight: 600;
+      border: 1px solid rgba(255,255,255,.18); backdrop-filter: blur(3px);
+    }
+    .view-full-photo:hover { background: var(--sa-red); }
+
+    .modal-grid2 { display: flex; gap: 20px; }
+    .modal-grid2 .modal-field { flex: 1; }
+
+    /* ── Survey view map ─────────────────────────────────────────────────────── */
+    .survey-map-bar {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 12px 16px 8px; flex-shrink: 0;
+    }
+    .survey-map-bar h3 { font-size: .9rem; font-weight: 700; color: var(--text); }
+    .survey-map-toggle {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: .8rem; color: var(--muted); cursor: pointer; user-select: none;
+    }
+    .survey-map-toggle input { accent-color: var(--sa-red); cursor: pointer; }
+    #survey-map {
+      width: calc(100% - 32px); height: 340px; margin: 0 16px 16px;
+      border-radius: 10px; border: 1px solid var(--border); flex-shrink: 0;
     }
   </style>
 
@@ -963,6 +1010,7 @@
             <th data-col="deal_status">Deal Status <span class="sort-arrow">↕</span></th>
             <th data-col="deal_notes">Latest Notes <span class="sort-arrow">↕</span></th>
             <th data-col="drumline">Drumline <span class="sort-arrow">↕</span></th>
+            <th class="no-sort"></th>
           </tr>
         </thead>
         <tbody id="deals-tbody"></tbody>
@@ -994,13 +1042,24 @@
         <tbody id="survey-review-tbody"></tbody>
       </table>
     </div>
+    <div class="survey-map-bar">
+      <h3>Survey Map</h3>
+      <label class="survey-map-toggle">
+        <input type="checkbox" id="survey-map-overlay" />
+        Overlay portfolio locations
+      </label>
+    </div>
+    <div id="survey-map"></div>
   </div>
 
   <!-- Survey detail modal -->
   <div class="modal-overlay" id="survey-modal">
     <div class="modal-card">
       <button class="modal-close" id="survey-modal-close">&times;</button>
-      <img class="modal-photo" id="modal-photo" src="" alt="Site photo" />
+      <div class="modal-photo-wrap" id="survey-photo-wrap">
+        <img class="modal-photo" id="modal-photo" src="" alt="Site photo" />
+        <a class="view-full-photo" id="survey-view-full" href="#" target="_blank" rel="noopener">View full photo ↗</a>
+      </div>
       <div class="modal-body">
         <div class="modal-title" id="modal-title"></div>
         <div class="modal-field">
@@ -1026,6 +1085,55 @@
           <div class="modal-value notes" id="modal-notes"></div>
         </div>
         <a class="modal-flyer-btn" id="modal-flyer-btn" href="#" target="_blank">📄 View Flyer</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deal detail modal -->
+  <div class="modal-overlay" id="deal-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="deal-modal-close">&times;</button>
+      <div class="modal-photo-wrap" id="deal-photo-wrap"></div>
+      <div class="modal-body">
+        <div class="modal-title" id="deal-modal-title"></div>
+        <div class="modal-grid2">
+          <div class="modal-field">
+            <div class="modal-label">Site ID</div>
+            <div class="modal-value" id="deal-modal-siteid"></div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">Deal Type</div>
+            <div class="modal-value" id="deal-modal-type"></div>
+          </div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Address</div>
+          <div class="modal-value" id="deal-modal-address"></div>
+        </div>
+        <div class="modal-grid2">
+          <div class="modal-field">
+            <div class="modal-label">Deal Status</div>
+            <div class="modal-value" id="deal-modal-status"></div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">Drumline</div>
+            <div class="modal-value" id="deal-modal-lease"></div>
+          </div>
+        </div>
+        <div class="modal-grid2">
+          <div class="modal-field">
+            <div class="modal-label">SQFT</div>
+            <div class="modal-value" id="deal-modal-sqft"></div>
+          </div>
+          <div class="modal-field">
+            <div class="modal-label">Base Rent</div>
+            <div class="modal-value" id="deal-modal-rent"></div>
+          </div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-label">Latest Notes</div>
+          <div class="modal-value notes" id="deal-modal-notes"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1112,7 +1220,7 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
 
     if (target === "map")    setTimeout(() => map.invalidateSize(), 50);
     if (target === "deals")  renderDealsTable();
-    if (target === "survey") renderSurveyReviewTable();
+    if (target === "survey") { renderSurveyReviewTable(); initSurveyMap(); }
   });
 });
 
@@ -1286,6 +1394,12 @@ function renderSurveySubOptions() {
 // ── MARKER HELPERS ────────────────────────────────────────────────────────────
 function colorForType(type) { return DEAL_COLORS[type] || DEAL_COLORS.default; }
 
+// Strip a trailing ".0" (or ".00") from numeric-looking Site IDs for display
+function fmtId(v) {
+  if (v == null) return "";
+  return String(v).replace(/\.0+$/, "");
+}
+
 function makeIcon(color) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32">
     <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"
@@ -1311,7 +1425,7 @@ function renderList(props) {
     card.className = "prop-card"; card.dataset.id = p.site_id;
     const _addr = [p.street || p.full_address, p.city, p.state].filter(Boolean).join(", ") || "—";
     card.innerHTML = `
-      <div class="prop-name">${p.site_id ? `<span class="prop-id">${p.site_id}</span> · ` : ""}${p.store_name||"Unnamed"}</div>
+      <div class="prop-name">${p.site_id ? `<span class="prop-id">${fmtId(p.site_id)}</span> · ` : ""}${p.store_name||"Unnamed"}</div>
       <div class="prop-meta">${_addr}</div>
       ${badge(p.deal_type)}`;
     card.addEventListener("click", () => selectProperty(p.site_id));
@@ -1368,15 +1482,21 @@ document.getElementById("search").addEventListener("input", refreshSidebar);
 function openSurveyModal(s) {
   const modal = document.getElementById("survey-modal");
   const photo = document.getElementById("modal-photo");
+  const fullBtn = document.getElementById("survey-view-full");
 
   // Photo
   if (s.photo_link) {
     photo.src = s.photo_link;
     photo.style.display = "block";
-    photo.onerror = () => { photo.style.display = "none"; };
+    photo.style.cursor = "zoom-in";
+    photo.onerror = () => { photo.style.display = "none"; fullBtn.style.display = "none"; };
+    photo.onclick = () => window.open(s.photo_link, "_blank", "noopener");
+    fullBtn.href = s.photo_link;
+    fullBtn.style.display = "inline-block";
   } else {
     photo.style.display = "none";
     photo.src = "";
+    fullBtn.style.display = "none";
   }
 
   // Fields
@@ -1536,26 +1656,36 @@ function renderDealsTable() {
 
   const tbody = document.getElementById("deals-tbody");
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="6" class="no-deals">No active deals found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="no-deals">No active deals found</td></tr>`;
     return;
   }
 
   tbody.innerHTML = rows.map(p => {
     const color = colorForType(p.deal_type);
     return `<tr data-id="${p.site_id}">
-      <td>${p.site_id||"—"}</td>
+      <td>${fmtId(p.site_id)||"—"}</td>
       <td><strong>${p.store_name||"—"}</strong></td>
       <td><span class="deal-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${p.deal_type||"—"}</span></td>
       <td><span class="status-badge">${p.deal_status||"—"}</span></td>
       <td class="notes-cell" title="${(p.deal_notes||"").replace(/"/g,"&quot;")}">${p.deal_notes||"—"}</td>
       <td>${p.drumline||"—"}</td>
+      <td><button class="details-btn" data-detail="${p.site_id}">Details</button></td>
     </tr>`;
   }).join("");
 
+  tbody.querySelectorAll(".details-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      openDealModal(btn.dataset.detail);
+    });
+  });
+
   // Update sort arrows
   document.querySelectorAll("#deals-table th").forEach(th => {
+    if (!th.dataset.col) return;
     th.classList.toggle("sorted", th.dataset.col === dealSortCol);
     const arrow = th.querySelector(".sort-arrow");
+    if (!arrow) return;
     if (th.dataset.col === dealSortCol) {
       arrow.textContent = dealSortAsc ? "↑" : "↓";
     } else {
@@ -1564,29 +1694,68 @@ function renderDealsTable() {
   });
 }
 
-// Jump from a map pin's "View more" to the matching row in Deal View
+// Open a full-detail modal for a single deal/property
+const _PHOTO_PH_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+
+function openDealModal(siteId) {
+  const p = allProperties.find(x => String(x.site_id) === String(siteId));
+  if (!p) return;
+  const modal = document.getElementById("deal-modal");
+
+  // Photo (placeholder until location photos are added)
+  const wrap = document.getElementById("deal-photo-wrap");
+  const phHtml = msg => `<div class="modal-photo-ph">${_PHOTO_PH_ICON}<span>${msg}</span></div>`;
+  if (p.photo_link) {
+    wrap.innerHTML =
+      `<img class="modal-photo" src="${p.photo_link}" alt="Site photo"/>
+       <a class="view-full-photo" href="${p.photo_link}" target="_blank" rel="noopener">View full photo ↗</a>`;
+    const img = wrap.querySelector("img");
+    img.onerror = () => { wrap.innerHTML = phHtml("No photo yet"); };
+    img.style.cursor = "zoom-in";
+    img.onclick = () => window.open(p.photo_link, "_blank", "noopener");
+  } else {
+    wrap.innerHTML = phHtml("Photo coming soon");
+  }
+
+  const _addr = [p.street || p.full_address, p.city, p.state, p.zip].filter(Boolean).join(", ") || "—";
+  const _sqft = (p.sqft != null && String(p.sqft).trim())
+    ? (isNaN(parseFloat(p.sqft)) ? p.sqft : Math.round(parseFloat(p.sqft)).toLocaleString() + " SF") : "—";
+  const _rent = (p.base_rent != null && String(p.base_rent).trim())
+    ? (isNaN(parseFloat(p.base_rent)) ? p.base_rent : "$" + parseFloat(p.base_rent).toFixed(2) + "/SF") : "—";
+
+  document.getElementById("deal-modal-title").textContent = p.store_name || "Unnamed";
+  document.getElementById("deal-modal-siteid").textContent = fmtId(p.site_id) || "—";
+  document.getElementById("deal-modal-type").textContent = p.deal_type || "—";
+  document.getElementById("deal-modal-address").textContent = _addr;
+  document.getElementById("deal-modal-status").textContent = p.deal_status || "—";
+  document.getElementById("deal-modal-lease").textContent = p.drumline || "—";
+  document.getElementById("deal-modal-sqft").textContent = _sqft;
+  document.getElementById("deal-modal-rent").textContent = _rent;
+  document.getElementById("deal-modal-notes").textContent = p.deal_notes || "—";
+
+  modal.classList.add("open");
+}
+window.openDealModal = openDealModal;
+
+document.getElementById("deal-modal-close").addEventListener("click", () => {
+  document.getElementById("deal-modal").classList.remove("open");
+});
+document.getElementById("deal-modal").addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") document.getElementById("deal-modal").classList.remove("open");
+});
+
+// Jump from a map pin's "View more" straight to the deal detail modal
 function gotoDeal(siteId) {
-  const navBtn = document.querySelector('.nav-btn[data-view="deals"]');
-  if (navBtn) navBtn.click();
-  dealTypeFilter = "all";
-  document.querySelectorAll(".deal-chip").forEach(c => c.classList.toggle("active", c.dataset.dealType === "all"));
-  dealSearchQ = "";
-  const s = document.getElementById("deals-search"); if (s) s.value = "";
-  renderDealsTable();
-  requestAnimationFrame(() => {
-    const sel = (window.CSS && CSS.escape) ? CSS.escape(String(siteId)) : String(siteId);
-    const row = document.querySelector(`#deals-tbody tr[data-id="${sel}"]`);
-    if (row) {
-      document.querySelectorAll("#deals-tbody tr.row-highlight").forEach(r => r.classList.remove("row-highlight"));
-      row.classList.add("row-highlight");
-      row.scrollIntoView({ block: "center", behavior: "smooth" });
-    }
-  });
+  openDealModal(siteId);
 }
 window.gotoDeal = gotoDeal;
 
 // Sort on header click
 document.querySelectorAll("#deals-table th").forEach(th => {
+  if (!th.dataset.col) return;
   th.addEventListener("click", () => {
     if (dealSortCol === th.dataset.col) dealSortAsc = !dealSortAsc;
     else { dealSortCol = th.dataset.col; dealSortAsc = true; }
@@ -1715,6 +1884,75 @@ function makeSurveyIcon(order, rank) {
           fill="white" font-family="system-ui,sans-serif">${num}</text>
   </svg>`;
   return L.divIcon({ html: svg, className: "survey-pin", iconSize: [32,32], iconAnchor: [16,16], popupAnchor: [0,-20] });
+}
+
+// ── SURVEY VIEW MAP (survey sites only, optional portfolio overlay) ────────────
+let surveyMap = null, surveySiteLayer = null, surveyPortfolioLayer = null;
+
+function buildSurveyTileLayer() {
+  return L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    { attribution: '&copy; <a href="https://www.esri.com/">Esri</a>', maxZoom: 19 }
+  );
+}
+
+function renderSurveyMapMarkers() {
+  if (!surveyMap) return;
+  if (surveySiteLayer) { surveyMap.removeLayer(surveySiteLayer); }
+  surveySiteLayer = L.layerGroup();
+  const pts = [];
+
+  Object.entries(allSurveys).forEach(([sheetName, surveys]) => {
+    surveys.forEach(s => {
+      const lat = parseFloat(s.lat), lng = parseFloat(s.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+      const m = L.marker([lat, lng], { icon: makeSurveyIcon(s.survey_order, s.rank) });
+      m.bindPopup(
+        `<div class="popup-title">#${surveyNum(s.survey_order)} · ${s.street||""}${s.city ? ", "+s.city : ""}</div>
+         <div class="popup-row">Available SF &nbsp;<span>${s.available_sqft||"—"}</span></div>
+         <div class="popup-row">Base Rent &nbsp;<span>${s.base_rent ? "$"+s.base_rent+"/SF" : "—"}</span></div>`,
+        { maxWidth: 280 });
+      m.on("click", () => openSurveyModal(s));
+      surveySiteLayer.addLayer(m);
+      pts.push([lat, lng]);
+    });
+  });
+
+  surveySiteLayer.addTo(surveyMap);
+  if (pts.length) surveyMap.fitBounds(pts, { padding: [40, 40] });
+}
+
+function renderSurveyPortfolioOverlay(show) {
+  if (!surveyMap) return;
+  if (surveyPortfolioLayer) { surveyMap.removeLayer(surveyPortfolioLayer); surveyPortfolioLayer = null; }
+  if (!show) return;
+  surveyPortfolioLayer = L.layerGroup();
+  allProperties.forEach(p => {
+    if (!p.lat || !p.lng) return;
+    const m = L.marker([p.lat, p.lng], { icon: makeIcon(colorForType(p.deal_type)) });
+    const _addr = [p.street || p.full_address, p.city, p.state].filter(Boolean).join(", ") || "—";
+    m.bindPopup(`<div class="popup-title">${p.store_name||"Unnamed"}</div>
+      <div class="popup-row">Address &nbsp;<span>${_addr}</span></div>`);
+    surveyPortfolioLayer.addLayer(m);
+  });
+  surveyPortfolioLayer.addTo(surveyMap);
+}
+
+function initSurveyMap() {
+  if (!surveyMap) {
+    surveyMap = L.map("survey-map", { zoomControl: true }).setView(CLIENT_CONFIG.mapCenter, CLIENT_CONFIG.mapZoom);
+    buildSurveyTileLayer().addTo(surveyMap);
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 19, opacity: 0.4, pane: "overlayPane" }
+    ).addTo(surveyMap);
+    const cb = document.getElementById("survey-map-overlay");
+    if (cb) cb.addEventListener("change", () => renderSurveyPortfolioOverlay(cb.checked));
+    renderSurveyMapMarkers();
+  } else {
+    renderSurveyMapMarkers();
+  }
+  setTimeout(() => surveyMap.invalidateSize(), 60);
 }
 
 function renderSurveyList() {
