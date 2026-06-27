@@ -331,25 +331,34 @@
     }
 
     /* Photo strip */
-    .card-photo {
+    .card-photo-wrap {
+      position: relative;
       width: 100%;
       height: 170px;
-      object-fit: cover;
-      display: block;
       background: var(--surface-2);
       flex-shrink: 0;
-    }
-
-    .card-no-photo {
-      width: 100%;
-      height: 170px;
-      background: var(--surface-2);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      overflow: hidden;
     }
-    .card-no-photo svg { width: 36px; height: 36px; color: var(--dim); }
+    /* SVG placeholder icon shown behind the img; hidden when img loads */
+    .card-photo-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233a5266' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E") center / 40px no-repeat;
+      pointer-events: none;
+    }
+    .card-photo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      z-index: 1;
+    }
 
     /* Card body */
     .card-body {
@@ -653,6 +662,7 @@ let currentFilter = 'all';
 
 /* ── SVG helpers ─────────────────────────────────────────────────────────── */
 const iconPhoto = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+// Note: iconPhoto is NOT interpolated into HTML attributes (would break due to quotes in SVG)
 const iconLink  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
 const iconPin   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 const iconDoc   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
@@ -678,9 +688,9 @@ function buildCard(s, idx) {
   const sqftDisplay = s.sqft || '<span class="pending">TBD</span>';
   const opxDisplay  = s.opx  || '<span class="pending">—</span>';
 
-  const photoEl = s.photo
-    ? `<img class="card-photo" src="${s.photo}" alt="${s.address}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=card-no-photo>${iconPhoto}</div>'">`
-    : `<div class="card-no-photo">${iconPhoto}</div>`;
+  const photoEl = `<div class="card-photo-wrap">${
+    s.photo ? `<img class="card-photo" src="${s.photo}" alt="${s.address}" loading="lazy">` : ''
+  }</div>`;
 
   const photoLink = s.photo
     ? `<a class="card-link" href="${s.photo}" target="_blank" rel="noopener">${iconPhoto} Photo</a>`
