@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SoCal Site Survey — Salvation Army</title>
+  <meta name="description" content="Southern California site survey — 41 candidate locations ranked by score for Salvation Army retail and donation operations." />
+  <style>
+    /* ── Tokens ──────────────────────────────────────────────────────────── */
+    :root {
+      --bg:          #060a14;
+      --surface:     #0b1120;
+      --surface-2:   #101828;
+      --border:      #1a2d42;
+      --border-hi:   #253d56;
+      --text:        #e2e8f0;
+      --muted:       #6b839a;
+      --dim:         #3a5266;
+
+      --red:         #EE2A24;
+      --red-dim:     rgba(238,42,36,.12);
+      --red-glow:    rgba(238,42,36,.30);
+
+      --green:       #22c55e;
+      --green-dim:   rgba(34,197,94,.12);
+      --green-glow:  rgba(34,197,94,.28);
+
+      --amber:       #f59e0b;
+      --amber-dim:   rgba(245,158,11,.12);
+      --amber-glow:  rgba(245,158,11,.28);
+
+      --header-h: 52px;
+      --filter-h: 54px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    #header {
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      flex-shrink: 0;
+    }
+
+    .shield {
+      width: 28px; height: 28px;
+      background: var(--red);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: #fff;
+      flex-shrink: 0;
+    }
+
+    .brand-name {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .header-divider {
+      width: 1px; height: 26px;
+      background: var(--border);
+      flex-shrink: 0;
+      margin: 0 2px;
+    }
+
+    .survey-label {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .site-count-badge {
+      font-size: .72rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 11px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0 14px;
+      height: 34px;
+      transition: color .15s, border-color .15s;
+    }
+    .back-link:hover { color: var(--text); border-color: var(--border-hi); }
+    .back-link svg { width: 13px; height: 13px; }
+
+    /* ── Filter bar ──────────────────────────────────────────────────────── */
+    #filter-bar {
+      height: var(--filter-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 8px;
+      position: sticky;
+      top: var(--header-h);
+      z-index: 190;
+      flex-shrink: 0;
+    }
+
+    .filter-label {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--dim);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+
+    .rank-btn {
+      height: 30px;
+      padding: 0 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .rank-btn:hover { color: var(--text); border-color: var(--border-hi); }
+
+    .rank-btn.active-all {
+      border-color: var(--red-glow);
+      color: var(--red);
+      background: var(--red-dim);
+    }
+    .rank-btn.active-green {
+      border-color: var(--green-glow);
+      color: var(--green);
+      background: var(--green-dim);
+    }
+    .rank-btn.active-yellow {
+      border-color: var(--amber-glow);
+      color: var(--amber);
+      background: var(--amber-dim);
+    }
+
+    .rank-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-green  { background: var(--green); }
+    .dot-yellow { background: var(--amber); }
+    .dot-all    { background: var(--red); }
+
+    .filter-spacer { flex: 1; }
+
+    .sort-select {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select:focus { border-color: var(--border-hi); }
+
+    /* ── Main grid ───────────────────────────────────────────────────────── */
+    #main {
+      flex: 1;
+      padding: 20px;
+    }
+
+    /* Rank section headers */
+    .rank-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .rank-section-header + .card-grid { margin-bottom: 32px; }
+
+    .rank-section-pip {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pip-green  { background: var(--green);  box-shadow: 0 0 6px var(--green-glow); }
+    .pip-yellow { background: var(--amber);  box-shadow: 0 0 6px var(--amber-glow); }
+
+    .rank-section-title {
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .rank-section-title.green { color: var(--green); }
+    .rank-section-title.yellow { color: var(--amber); }
+
+    .rank-section-count {
+      font-size: .7rem;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Site card ───────────────────────────────────────────────────────── */
+    .site-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color .18s, box-shadow .18s;
+      position: relative;
+    }
+    .site-card:hover {
+      border-color: var(--border-hi);
+      box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    }
+    .site-card.rank-green:hover  { border-color: rgba(34,197,94,.3); }
+    .site-card.rank-yellow:hover { border-color: rgba(245,158,11,.3); }
+
+    /* Survey order badge */
+    .survey-order {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(6,10,20,.75);
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-size: .65rem;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .06em;
+      padding: 3px 7px;
+      z-index: 2;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Score ring area */
+    .score-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      z-index: 2;
+      border: 2px solid;
+      background: rgba(6,10,20,.82);
+      backdrop-filter: blur(4px);
+    }
+    .score-badge.green  { border-color: var(--green); }
+    .score-badge.yellow { border-color: var(--amber); }
+
+    .score-num {
+      font-size: .9rem;
+      font-weight: 900;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .score-badge.green  .score-num { color: var(--green); }
+    .score-badge.yellow .score-num { color: var(--amber); }
+
+    .score-lbl {
+      font-size: .48rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* Photo strip */
+    .card-photo {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      display: block;
+      background: var(--surface-2);
+      flex-shrink: 0;
+    }
+
+    .card-no-photo {
+      width: 100%;
+      height: 170px;
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-no-photo svg { width: 36px; height: 36px; color: var(--dim); }
+
+    /* Card body */
+    .card-body {
+      padding: 14px 16px 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .card-address {
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+
+    .card-city {
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    /* Metrics strip */
+    .metrics-strip {
+      display: flex;
+      gap: 0;
+      margin: 12px 0 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .metric {
+      flex: 1;
+      padding: 8px 10px;
+      border-right: 1px solid var(--border);
+      min-width: 0;
+    }
+    .metric:last-child { border-right: none; }
+
+    .metric-label {
+      font-size: .6rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .metric-value {
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .metric-value.pending { color: var(--dim); font-style: italic; font-weight: 500; }
+
+    /* Former use tag */
+    .former-use-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .66rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+    .tag svg { width: 10px; height: 10px; color: var(--dim); }
+
+    .nearest-sa {
+      font-size: .66rem;
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nearest-sa svg { width: 10px; height: 10px; flex-shrink: 0; }
+
+    /* Notes */
+    .card-notes {
+      margin-top: 10px;
+      font-size: .74rem;
+      line-height: 1.55;
+      color: var(--muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Card footer */
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px 11px;
+      transition: color .15s, border-color .15s;
+    }
+    .card-link:hover { color: var(--text); border-color: var(--border-hi); }
+    .card-link svg { width: 11px; height: 11px; }
+
+    /* Cotenants */
+    .cotenants-row {
+      margin-top: 8px;
+      font-size: .7rem;
+      color: var(--dim);
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .cotenants-label {
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .03em;
+    }
+
+    /* Empty state */
+    #empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 80px 20px;
+      color: var(--dim);
+    }
+    #empty-state svg { width: 40px; height: 40px; }
+    #empty-state p { font-size: .88rem; }
+
+    /* Rank sections wrapper */
+    .rank-section { margin-bottom: 8px; }
+    .rank-section.hidden { display: none; }
+
+    @media (max-width: 600px) {
+      #main { padding: 12px; }
+      .card-grid { grid-template-columns: 1fr; gap: 10px; }
+      #filter-bar { gap: 6px; padding: 0 12px; }
+      #header { padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header id="header">
+  <div class="shield">S</div>
+  <span class="brand-name">Salvation Army</span>
+  <div class="header-divider"></div>
+  <span class="survey-label">SoCal Site Survey</span>
+  <div class="header-spacer"></div>
+  <span class="site-count-badge" id="count-badge">41 sites</span>
+  <a href="index.html" class="back-link">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 3L5 8l5 5"/>
+    </svg>
+    Map
+  </a>
+</header>
+
+<!-- ── Filter bar ──────────────────────────────────────────────────────────── -->
+<div id="filter-bar">
+  <span class="filter-label">Rank</span>
+  <button class="rank-btn active-all" id="btn-all" onclick="setFilter('all')">
+    <span class="rank-dot dot-all"></span>All
+  </button>
+  <button class="rank-btn" id="btn-green" onclick="setFilter('green')">
+    <span class="rank-dot dot-green"></span>Green
+  </button>
+  <button class="rank-btn" id="btn-yellow" onclick="setFilter('yellow')">
+    <span class="rank-dot dot-yellow"></span>Yellow
+  </button>
+  <div class="filter-spacer"></div>
+  <select class="sort-select" id="sort-select" onchange="applySort()">
+    <option value="score-desc">Score ↓</option>
+    <option value="score-asc">Score ↑</option>
+    <option value="rent-asc">Rent ↑</option>
+    <option value="city-az">City A–Z</option>
+  </select>
+</div>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main id="main">
+  <div id="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <p>No sites match this filter.</p>
+  </div>
+
+  <div class="rank-section" id="section-green">
+    <div class="rank-section-header">
+      <span class="rank-section-pip pip-green"></span>
+      <span class="rank-section-title green">Green</span>
+      <span class="rank-section-count" id="green-count">31 sites</span>
+    </div>
+    <div class="card-grid" id="grid-green"></div>
+  </div>
+
+  <div class="rank-section" id="section-yellow">
+    <div class="rank-section-header">
+      <span class="rank-section-pip pip-yellow"></span>
+      <span class="rank-section-title yellow">Yellow</span>
+      <span class="rank-section-count" id="yellow-count">10 sites</span>
+    </div>
+    <div class="card-grid" id="grid-yellow"></div>
+  </div>
+</main>
+
+<script>
+/* ── Data ────────────────────────────────────────────────────────────────── */
+const SITES = [
+  /* ── GREEN ── */
+  { rank:"Green", score:95, address:"29787 Antelope Rd", city:"Menifee", state:"CA", zip:"92584", submarket:null, sqft:"12,596", rent:"pending", opx:"NNN", asBuilt:"Beauty Retail", nearestSA:"Perris – Perris (6.8 mi)", cotenants:"LA Fitness, Barons Market, In the City Beauty", notes:"Inline space in a well-anchored Menifee shopping center with strong daily traffic generators including LA Fitness and Barons Market — complementary uses that drive consistent repeat visits. The growing Menifee community represents an underserved market for Salvation Army services with limited nearby coverage.", photo:"https://ahprd1cdn.csgpimgs.com/i2/ahqoHO_gJo9bnxKmlGp7EfGv78Vxm5F8UcpW5nFykNI/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/FCkR0xm7hGPkRaSqbBYeLVpPHDOFnMXr1NsTub0bX8M/document.pdf" },
+  { rank:"Green", score:93, address:"10727-10833 Long Beach Blvd", city:"Lynwood", state:"CA", zip:"90262", submarket:null, sqft:"15,000", rent:"Pending", opx:null, asBuilt:"Inline Retail", nearestSA:"Downey – Downey (6.2 mi)", cotenants:"Smart & Final, Dollar Tree", notes:"Neighborhood center anchored by Smart & Final and Dollar Tree along Long Beach Blvd in Lynwood — a high-density corridor with strong value-retail foot traffic closely aligned with Salvation Army's core donor and shopper base.", photo:"https://ahprd1cdn.csgpimgs.com/i2/hJ4a6KP1j9S2_CxwP8wYhXhIFhGayKCrIu00IGZgPvY/116/image.jpg", flyer:null },
+  { rank:"Green", score:93, address:"12190 Perris Blvd", city:"Moreno Valley", state:"CA", zip:"92557", submarket:null, sqft:"10,420", rent:"Pending", opx:"NNN", asBuilt:"Fitness 19 (Gym)", nearestSA:"Perris – Perris (8.4 mi)", cotenants:"Moreno Valley neighborhood center", notes:"Former Fitness 19 junior anchor in a Moreno Valley neighborhood center, offering a wide-open floor plan well-suited for conversion to retail display and donation intake operations. The Inland Valley location serves a growing residential community with strong donation potential and limited existing TSA coverage.", photo:"https://ahprd1cdn.csgpimgs.com/i2/iaYu0X4I1PSCkzFzxta-Y54QZEmKnMP7nSTu6y7jHt8/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/a1zLSr0HSfsRnVh5UnoSYIJAlPIAHjZ1lgbOIplaf3g/document.pdf" },
+  { rank:"Green", score:90, address:"2011 N Riverside Ave", city:"Rialto", state:"CA", zip:"92377", submarket:null, sqft:"13,650", rent:"$9.50", opx:"MG", asBuilt:"Walgreens", nearestSA:"San Bernardino (E St) – San Bernardino (5.0 mi)", cotenants:"Freestanding; surrounding Rialto neighborhood retail", notes:"Former Walgreens available via sublease through November 2039 at a well-below-market rate of $9.50/SF MG, offering exceptional long-term cost certainty in the Rialto market. The freestanding format provides independent parking and signage, with drive-through access adaptable for donation drop-off.", photo:"https://ahprd1cdn.csgpimgs.com/i2/FrRcjnGbdOB88vF54Vibc5Koryr4bupbx80C9KHoJeY/116/image.jpg", flyer:null },
+  { rank:"Green", score:90, address:"6755 Van Nuys Blvd", city:"Van Nuys", state:"CA", zip:"91405", submarket:null, sqft:"13,755", rent:"$22.20", opx:"NNN", asBuilt:"99 Cents Only", nearestSA:"Granada Hills – North Hills (3.6 mi)", cotenants:"Van Nuys Blvd neighborhood retail corridor", notes:"Freestanding former 99 Cents Only on a hard corner of Van Nuys Blvd, offering commanding street visibility and strong demographic alignment with the surrounding community. The hard corner position and freestanding format provide excellent signage opportunities and ease of access for donation drop-off.", photo:"https://ahprd1cdn.csgpimgs.com/i2/d6AKoATFVH-X_MX9fWFnsUCK564N0lQuUd9n1Gh4FYQ/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/IIHsvvxmn3bCe_Udsv92x-ndui13ZKPqLVGXywqeVGk/document.pdf" },
+  { rank:"Green", score:89, address:"2801 Paseo Mercado", city:"Oxnard", state:"CA", zip:"93036", submarket:null, sqft:"10,506", rent:"$34.20", opx:"NNN", asBuilt:"Loft Home", nearestSA:"Newbury Park – Thousand Oaks (18.9 mi)", cotenants:"Costco (adjacent), Paseo Mercado power center", notes:"Freestanding former home furnishings building directly adjacent to Costco in Oxnard's Paseo Mercado power center, benefiting from exceptional co-tenancy traffic and strong weekend destination-shopping patterns. The freestanding configuration provides dedicated parking and independent signage for clear brand identity.", photo:"https://ahprd1cdn.csgpimgs.com/i2/9ZtjSMjBwET7fXjyfI2JiY50-hCxhXAAfWHpT6g7x0c/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/umrJTSMEgxFrht5vj3VSRWuoWv9G04DaemWUX4Za8Uc/document.pdf" },
+  { rank:"Green", score:87, address:"38360 20th St", city:"Palmdale", state:"CA", zip:"93550", submarket:null, sqft:"10,000–22,218", rent:null, opx:null, asBuilt:"99 Cents Only", nearestSA:"Lancaster – Lancaster (6.4 mi)", cotenants:"Superior Grocers, inline neighborhood retailers", notes:"Former 99 Cents Only anchor space adjacent to Superior Grocers in Palmdale, featuring high ceilings and a fire suppression system — key operational requirements for a full Salvation Army retail and receiving operation. Grocery-anchored centers consistently drive among the highest foot traffic in value retail corridors.", photo:"https://ahprd1cdn.csgpimgs.com/i2/ALsMUgQSJeCPGFUBUNcg843s-f40GH6fnmWvTFRL5do/116/image.jpg", flyer:null },
+  { rank:"Green", score:85, address:"135 W Ventura Blvd", city:"Camarillo", state:"CA", zip:"93010", submarket:null, sqft:"9,425", rent:"$24.00", opx:"NNN", asBuilt:"Junior Anchor Retail", nearestSA:"Newbury Park – Thousand Oaks (10.1 mi)", cotenants:"Camarillo 101 corridor retailers", notes:"Junior anchor with dual-street visibility from the 101 freeway off-ramp and Las Posas Road, offering outstanding regional exposure in Camarillo. Direct ingress and egress from both Ventura Blvd and Las Posas Road supports an efficient, high-volume donation drop-off operation.", photo:"https://ahprd1cdn.csgpimgs.com/i2/1QX_ZRV769DH4jV9KFevEbO7H3sIN9fEOrc7ccv1QBA/116/image.jpg", flyer:null },
+  { rank:"Green", score:85, address:"1548 E Warner Ave", city:"Santa Ana", state:"CA", zip:"92705", submarket:"Santa Ana", sqft:"12,014", rent:"$21.00", opx:null, asBuilt:"Kids Room Furniture", nearestSA:"Orange – Orange (4.3 mi)", cotenants:"Sit 'N Sleep, Central OC neighborhood retailers", notes:"Corner-positioned former furniture store in Santa Ana offering immediate 55 Freeway access, a dedicated truck well, and loading doors — making it among the most operationally capable donation-receiving sites in the portfolio. The prominent corner location and freeway visibility ensure high daily traffic counts.", photo:"https://ahprd1cdn.csgpimgs.com/i2/ZEFlSXFNmYs9PnTiwvsksTJrbi8xqJyQVKnWME_HAMw/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/pek44RM23AJomDdeSr6PEVXyi-XSgh9nawNKyKEWRz0/document.pdf" },
+  { rank:"Green", score:85, address:"23881-23887 Clinton Keith Rd", city:"Wildomar", state:"CA", zip:"92595", submarket:null, sqft:"8,277 / 15,082", rent:"pending", opx:"NNN", asBuilt:"Neighborhood Center Inline", nearestSA:"Temecula – Temecula (8.4 mi)", cotenants:"ACE Hardware (anchor), Wildomar neighborhood service retailers", notes:"Inline space in an ACE Hardware-anchored neighborhood center in Wildomar, serving a growing Inland Valley residential community with strong community-oriented shopping patterns. Two suite options — 8,277 SF and 15,082 SF — offer flexibility to right-size the footprint for mission needs.", photo:"https://ahprd1cdn.csgpimgs.com/i2/1K-1rHVznm6CTSsGwRFOE5dOngQi5pb8ILF_2BUVo60/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/WWr9AVZWz8GM5CQSX5CtOxf_S0yADDnOToCq3dxFsgE/document.pdf" },
+  { rank:"Green", score:85, address:"4621 E Avenue S", city:"Palmdale", state:"CA", zip:"93552", submarket:null, sqft:"10,000–21,500", rent:"$12.00", opx:"NNN", asBuilt:"New Construction (Mixed-Use)", nearestSA:"Lancaster – Lancaster (9.2 mi)", cotenants:"East Palmdale mixed-use retail and professional office", notes:"Recently constructed two-story mixed-use building in East Palmdale's expanding retail district, offering a modern shell in an emerging corridor with a growing daytime office population. Ground-floor retail space delivers strong street visibility in a community actively attracting new commercial tenants.", photo:"https://ahprd1cdn.csgpimgs.com/i2/VaA36KLZR7M_XIsiOIzVFt5RK0pJqSBVnXqswkBUPYg/116/image.jpg", flyer:null },
+  { rank:"Green", score:85, address:"564-586 W Foothill Blvd", city:"Rialto", state:"CA", zip:"92376", submarket:null, sqft:"10,640", rent:"$18.00", opx:"NNN", asBuilt:"Inline Retail", nearestSA:"San Bernardino (E St) – San Bernardino (5.0 mi)", cotenants:"Family Dollar, Furniture for Less", notes:"Inline space in a value-oriented shopping center anchored by Family Dollar and Furniture for Less in Rialto — a tenant mix that aligns well with Salvation Army's core customer and donor demographics. The Foothill Blvd corridor provides strong residential access and consistent daily traffic.", photo:"https://ahprd1cdn.csgpimgs.com/i2/fJzpDLri6Xb_ZGBaBP_wqU6QmGR9S-VDVSIbgb8IjBY/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/BFXcBjRUFERob1UwGFX7vK1_n26jQbkwQ6rJfxNem3M/document.pdf" },
+  { rank:"Green", score:84, address:"13031-13133 Harbor Blvd", city:"Garden Grove", state:"CA", zip:"92843", submarket:null, sqft:"12,000", rent:"$21.00", opx:"NNN", asBuilt:"Junior Anchor Retail", nearestSA:"Katella – Anaheim (4.2 mi)", cotenants:"Chuck E. Cheese, Staples", notes:"Junior anchor in-line space in a well-tenanted Garden Grove center anchored by Chuck E. Cheese and Staples, generating consistent family and destination-shopping traffic. The center's strong co-tenancy and Harbor Blvd exposure offer excellent visibility for a Salvation Army retail presence.", photo:"https://ahprd1cdn.csgpimgs.com/i2/y351gJ0MmmySNzF0iQ0iQusuwWs8nevmI__nyIlwBJo/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/CQBynqpxbJ7Yd4RtRrqqKrANVZPnugc7l37nnzBqRDs/document.pdf" },
+  { rank:"Green", score:84, address:"3310 Telegraph Rd", city:"Ventura", state:"CA", zip:"93003", submarket:null, sqft:"14,130", rent:"$16.00", opx:"NNN", asBuilt:"Auto Body Shop", nearestSA:"Newbury Park – Thousand Oaks (21.7 mi)", cotenants:"Telegraph Rd commercial corridor", notes:"Sublease through April 2032 on Telegraph Rd in Ventura, offering a below-market term in a high-visibility commercial corridor. The former autobody shop configuration features clear-span space and drive-in access points well-suited for donation receiving and staging operations.", photo:"https://ahprd1cdn.csgpimgs.com/i2/bGcaHsHqiNhTTaYgpoB_awwI0vWw3Czr290ovA7iDy8/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/YvTX6PwN2wNrtOhbsy-GYA_W69y5KrRyr7ZQTaOCPHQ/document.pdf" },
+  { rank:"Green", score:84, address:"704-880 Arneill Rd", city:"Camarillo", state:"CA", zip:"93010", submarket:null, sqft:"10,000–38,638", rent:"$24.00", opx:"NNN", asBuilt:"Vons", nearestSA:"Newbury Park – Thousand Oaks (10.2 mi)", cotenants:"CVS, Vons (newly constructed, 60,000 SF)", notes:"Exceptional co-tenancy alongside a newly constructed 60,000 SF Vons and CVS in Camarillo, driving daily grocery and pharmacy traffic from the surrounding residential community. Monument signage on Arneill Rd provides strong street-level brand exposure in a high-growth Ventura County submarket.", photo:"https://ahprd1cdn.csgpimgs.com/i2/EIvX_K256Jyb2uIbqi0Z_UkrPjLKPDcMCwzehGpHbRQ/116/image.jpg", flyer:null },
+  { rank:"Green", score:83, address:"11836-11840 Artesia Blvd", city:"Artesia", state:"CA", zip:"90701", submarket:"Mid-Cities", sqft:"8,460", rent:"$26.88", opx:"MG", asBuilt:"Hardware Store", nearestSA:"Buena Park – Buena Park (4.6 mi)", cotenants:"Freestanding; surrounding Artesia neighborhood service retail", notes:"Freestanding former hardware store in Artesia featuring 34 dedicated parking stalls and an open floor plan with high ceilings — an outstanding setup for both high-volume retail and a prime donation drop-off operation. Ample parking and direct Artesia Blvd access make this one of the most operationally ideal sites in the portfolio.", photo:"https://ahprd1cdn.csgpimgs.com/i2/UtoXUsvEDlW1EL1RyT66VL2_JTzpsGZHKqQneY5dO6w/116/image.jpg", flyer:null },
+  { rank:"Green", score:82, address:"11944 South St", city:"Cerritos", state:"CA", zip:"90703", submarket:null, sqft:"13,050", rent:"$28.00", opx:"NNN", asBuilt:"Advance Auto Parts", nearestSA:"Buena Park – Buena Park (3.5 mi)", cotenants:"Pep Boys, neighborhood inline retailers", notes:"Former Advance Auto Parts in Cerritos with excellent co-tenancy adjacent to Pep Boys, ensuring consistent traffic along the South St corridor. Pricing is subject to a bulk discount if multiple locations are acquired simultaneously — a meaningful portfolio opportunity.", photo:"https://ahprd1cdn.csgpimgs.com/i2/oWu5YWeVeEuE9yUhtTjsll2nqo1pybj7celBgFgJtd8/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/9-5QRk_kEnMefSmyC8z7ZxG8YG9xTRjQb21QN1ZYa74/document.pdf" },
+  { rank:"Green", score:82, address:"1240-1250 Vine St", city:"Los Angeles", state:"CA", zip:"90038", submarket:null, sqft:"15,788", rent:null, opx:null, asBuilt:"Office Depot", nearestSA:"Los Angeles (Pico) – Los Angeles (4.6 mi)", cotenants:"Smaller inline retail tenants", notes:"End-cap former Office Depot in a Hollywood retail center at Vine St, offering strong corner visibility and high pedestrian and vehicular traffic. The large open floor plate is well-suited for retail display with ample rear space for donation processing and staging.", photo:"https://ahprd1cdn.csgpimgs.com/i2/gBMf_CqLBeGSvbr8vUgVG03fnN8pRamnulESS8Gqqss/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/Qdioxf4dqs8ijxmQojm02thJcvBIh6alPAqwRDsmfto/document.pdf" },
+  { rank:"Green", score:82, address:"30192 Town Center Dr", city:"Laguna Niguel", state:"CA", zip:"92677", submarket:null, sqft:"13,284", rent:"pending", opx:"NNN", asBuilt:"Walgreens", nearestSA:"Aliso Viejo (Pending) – Aliso Viejo (3.6 mi)", cotenants:"Town Center restaurants, service retail", notes:"Former Walgreens in Laguna Niguel's Town Center offering 10,636 SF of ground-floor retail plus 2,648 SF of second-floor storage and office space — an ideal split between retail operations and dedicated back-of-house functionality. The established trade area serves an affluent South OC donor base.", photo:"https://ahprd1cdn.csgpimgs.com/i2/e1MLbvr9gzYMBA9-pLcnVUew1_2PrhrvHmnUbQB7hHk/116/image.jpg", flyer:null },
+  { rank:"Green", score:82, address:"440-442 W Rancho Vista Blvd", city:"Palmdale", state:"CA", zip:"93551", submarket:null, sqft:"12,000", rent:"$18.00", opx:"NNN", asBuilt:"99 Cents Only", nearestSA:"Lancaster – Lancaster (7.8 mi)", cotenants:"Community center anchor and inline neighborhood retailers", notes:"Former 99 Cents Only end-cap in a Palmdale community center offering a proven retail configuration with easy access and ample shared parking. The end-cap position provides prominent visibility and natural wayfinding that supports a donation drop-off program.", photo:"https://ahprd1cdn.csgpimgs.com/i2/sxHaVfmAaA0lolPzU4FjP9L3stBTi-hwqR1eZxzOWeM/116/image.jpg", flyer:null },
+  { rank:"Green", score:81, address:"10325 Central Ave", city:"Montclair", state:"CA", zip:"91763", submarket:null, sqft:null, rent:"$27.00", opx:"NNN", asBuilt:"Auto Dealership", nearestSA:"Chino – Chino (6.0 mi)", cotenants:"Automotive and neighborhood retail along Central Ave", notes:"Recently renovated freestanding building along Central Ave in Montclair featuring large pylon signage with excellent street visibility. The clean shell condition and prominent pylon opportunity support a strong street-level presence for both retail and donation operations.", photo:"https://ahprd1cdn.csgpimgs.com/i2/hXXn3h22vu1fSGo6xvnfHmaM6AMHboilJBTGKBjTJ2Q/116/image.jpg", flyer:null },
+  { rank:"Green", score:81, address:"11727-11729 South St", city:"Artesia", state:"CA", zip:"90701", submarket:null, sqft:"11,727", rent:"pending", opx:null, asBuilt:"Retail", nearestSA:"Buena Park – Buena Park (4.7 mi)", cotenants:"Sit 'N Sleep", notes:"Freestanding building along South St in Artesia with strong co-tenancy adjacent to Sit 'N Sleep, a destination home furnishings retailer driving consistent comparison-shopper traffic. The building's open configuration supports clean retail circulation and a designated donation intake zone.", photo:"https://ahprd1cdn.csgpimgs.com/i2/p3o1P603zQ3cwEX35HHbqk_itQS3QNCiZPhanRmU2j4/116/image.jpg", flyer:null },
+  { rank:"Green", score:81, address:"122 S Euclid St", city:"Anaheim", state:"CA", zip:"92802", submarket:null, sqft:"11,263", rent:"$27.00", opx:null, asBuilt:"WSS (Shoe Store)", nearestSA:"Katella – Anaheim (0.7 mi)", cotenants:"Denny's, surrounding Anaheim neighborhood retail", notes:"Former WSS (Warehouse Shoe Sale) freestanding building in Anaheim with a proven high-volume retail history and strong visibility along S. Euclid St. The open floor plan accommodates efficient merchandise display and a clearly defined donation staging area.", photo:"https://ahprd1cdn.csgpimgs.com/i2/lb62ITgiuQ8fWFB8ep-xpK0ceipXFcLW_uiBjEK8JoY/116/image.jpg", flyer:null },
+  { rank:"Green", score:80, address:"13700-13774 Foothill Blvd", city:"Sylmar", state:"CA", zip:"91342", submarket:null, sqft:"10,305 / 13,786", rent:null, opx:null, asBuilt:"Retail (details pending)", nearestSA:"Granada Hills – North Hills (6.2 mi)", cotenants:"Vons, inline neighborhood retailers", notes:"Anchor-adjacent opportunity in a Vons-anchored center along Foothill Blvd in Sylmar, providing built-in daily traffic from grocery shoppers. Additional details are pending from the listing broker; the strong co-tenancy and community demographics make this a high-priority site to advance.", photo:"https://ahprd1cdn.csgpimgs.com/i2/Vc-js-EF-qZrA6xlcdnacihlKaYfQC-s0ELjQlbD6-g/116/image.jpg", flyer:null },
+  { rank:"Green", score:80, address:"20655 Amar Rd", city:"Walnut", state:"CA", zip:"91789", submarket:"Eastern SGV", sqft:"8,855–19,805", rent:"$12.00", opx:"$8.16", asBuilt:"Dollar Tree", nearestSA:"West Covina – West Covina (2.5 mi)", cotenants:"Dollar Tree (former occupant), inline neighborhood retailers", notes:"Second-generation Dollar Tree in a well-established neighborhood center in Walnut, featuring a below-market asking rent of $12.00/PSF and an introductory teaser rate of $1.00/PSF for the first 6 months. A 10-year minimum term is required, and the site warrants a full scoring review given the favorable economics.", photo:"https://ahprd1cdn.csgpimgs.com/i2/6vp1NFduL3Dim3S42JJpo2mAJEwYowYlkDjLKpooADU/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/-7RMaMrBX8vPu0xq_F3zW_Sz2AOHg5jbc_E-Smu0i4w/document.pdf" },
+  { rank:"Green", score:78, address:"12491 Valley View St", city:"Garden Grove", state:"CA", zip:"92845", submarket:null, sqft:"5,000–22,633", rent:"pending", opx:null, asBuilt:"Rite Aid (Drug Store)", nearestSA:"Fountain Valley – Fountain Valley (5.2 mi)", cotenants:"MedTail (corner carve-out), neighborhood center retailers", notes:"Former Rite Aid end-cap with a designated medtail corner carve-out already in place, providing clear separation between retail and service tenants. The building offers high visibility at a signalized intersection with a large parking field well-suited for drive-up donation drop-off.", photo:"https://ahprd1cdn.csgpimgs.com/i2/3tncaRGBttiCwIoVuRXJaTV_sIp0z07Yw8VlJRw8qwk/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/PWqPTMSWHecZ3Atxb4d3pR8gIL6qocHQ2mN8m2RlPtQ/document.pdf" },
+  { rank:"Green", score:78, address:"201-235 W Huntington Dr", city:"Monrovia", state:"CA", zip:"91016", submarket:"Western SGV", sqft:"8,134", rent:"$28.00", opx:"NNN", asBuilt:"Advance Auto Parts", nearestSA:"Covina – Covina (6.8 mi)", cotenants:"Pep Boys", notes:"Former Advance Auto Parts freestanding building in Monrovia, positioned along the heavily trafficked W. Huntington Drive corridor approximately 8 miles from the Covina store. The open floor plan and strong curb appeal offer a turnkey opportunity, with pricing subject to further negotiation.", photo:"https://ahprd1cdn.csgpimgs.com/i2/VtP3mujjAF65RKPjhu9FItdS27swUyc-0l9vFSeYN-I/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/dmMVGRvff2aUjenE-YB65zxmp1RIBFaVF6zHpYAbLR4/document.pdf" },
+  { rank:"Green", score:78, address:"28610 Canwood St", city:"Agoura Hills", state:"CA", zip:"91301", submarket:"Calabasas/Westlake Vill", sqft:"11,000", rent:"$33.00", opx:"NNN", asBuilt:"Showroom / Retail", nearestSA:"Newbury Park – Thousand Oaks (6.8 mi)", cotenants:"Agoura Hills neighborhood retail and service tenants", notes:"A former showroom with high ceilings and an open floor plan in the Agoura Hills/Westlake Village submarket, catering to an affluent donor base. The generous ceiling heights accommodate efficient retail fixtures and are well-suited for a Salvation Army boutique format.", photo:"https://ahprd1cdn.csgpimgs.com/i2/WBVMwQQ9JQk8OrDDY9N_h_dBZEnvZ22rSWoXu0uE4VI/116/image.jpg", flyer:null },
+  { rank:"Green", score:78, address:"450-460 W Palmdale Blvd", city:"Palmdale", state:"CA", zip:"93551", submarket:"Antelope Valley", sqft:"13,200", rent:"$27.60", opx:"MG", asBuilt:"Office / Retail", nearestSA:"Lancaster – Lancaster (7.6 mi)", cotenants:"Hard corner retail and service tenants", notes:"Office/retail space on a hard corner along Palmdale's primary retail corridor, offering superior street visibility and convenient access for shoppers and donation drop-offs alike. The modified gross lease structure provides cost predictability for occupancy planning.", photo:"https://ahprd1cdn.csgpimgs.com/i2/HrCwtMbcKX_u9bCMZq9geETeqmUePI9WdiP2rwRxu_w/116/image.jpg", flyer:null },
+  { rank:"Green", score:77, address:"4200 Campus Dr", city:"Newport Beach", state:"CA", zip:"92660", submarket:null, sqft:"11,060", rent:null, opx:null, asBuilt:"Office / Retail", nearestSA:"Costa Mesa – Costa Mesa (3.4 mi)", cotenants:"John Wayne Airport area office/professional tenants", notes:"A freestanding office/retail building adjacent to John Wayne Airport offering excellent accessibility from two major arterials. The second-generation office layout provides clear-span floor plates adaptable for retail display and a staging area for donation intake.", photo:"https://ahprd1cdn.csgpimgs.com/i2/wgiVHhEVc1R3SQwQFxhxfN0lCAibeaFuqOixqJbXjzs/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/wsiusNM_mhjouJ0lcgx7UYNPyQxpGpjJTjpKnX6j6LM/document.pdf" },
+  { rank:"Green", score:76, address:"254 W Olive Ave", city:"Burbank", state:"CA", zip:"91502", submarket:null, sqft:"10,000", rent:null, opx:null, asBuilt:"Auto Parts / Retail", nearestSA:"Glendale – Glendale (3.9 mi)", cotenants:"Pep Boys, neighborhood food & service retail", notes:"This freestanding building on W. Olive Ave benefits from strong street presence in central Burbank with excellent ingress/egress and ample surface parking — ideal for a high-volume donation drop-off operation. The corridor attracts consistent daily traffic from Burbank's dense residential base and proximity to the downtown core.", photo:"https://ahprd1cdn.csgpimgs.com/i2/DkCOfZB2cxSCQg0Dacov_7Y2-Y6tlPewErF4hnXz4s8/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/WdjHSgT8tnvU9xiqo9Zb01c0AFdmlIW-RyM5jwZFnYo/document.pdf" },
+
+  /* ── YELLOW ── */
+  { rank:"Yellow", score:78, address:"25252 Mcintyre St", city:"Laguna Hills", state:"CA", zip:null, submarket:null, sqft:"10,605 / 12,260", rent:"$22.00", opx:"$9.24", asBuilt:"Retail End-Cap", nearestSA:"Mission Viejo (Pending) – Mission Viejo (1.8 mi)", cotenants:"Laguna Hills neighborhood center co-tenants", notes:"Two end-cap spaces available in a Laguna Hills neighborhood center, with the larger 12,260 SF suite offering the greatest suitability for a high-volume donation drop-off program and the option to designate dedicated parking stalls for donation intake. Both end-cap positions provide maximum center visibility and convenient donor access.", photo:"https://ahprd1cdn.csgpimgs.com/i2/F5hc9KVdHioUPR2wDoBr-qVFyhlnDunmDHI1kqSFIfg/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/J9WkK6kkaKfQJ6F5OxMzVpbl2_LhtJwYvUGGLHGKJNI/document.pdf" },
+  { rank:"Yellow", score:76, address:"12125 Day St (Bldg U)", city:"Moreno Valley", state:"CA", zip:"92557", submarket:null, sqft:"10,656", rent:"pending", opx:"NNN", asBuilt:"Retail End-Cap", nearestSA:"Perris – Perris (9.0 mi)", cotenants:"Moreno Valley Day St center co-tenants", notes:"End-cap space in a Moreno Valley shopping center on Day St, positioned to capture strong corner visibility and easy ingress from one of the market's primary retail arteries. The end-cap configuration supports clear retail and donation drop-off visibility from the parking field.", photo:"https://ahprd1cdn.csgpimgs.com/i2/Ygt100ESrA_5FZ547-o65Qad5DIFbMWigGMqFzLhnzo/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/TJ5izSX-u0Z5SfGb8Lf61PkKC0k4TNepFP1il79bgFY/document.pdf" },
+  { rank:"Yellow", score:76, address:"1321 W Foothill Blvd", city:"Rialto", state:"CA", zip:"92376", submarket:null, sqft:"8,000–26,000", rent:"pending", opx:"NNN", asBuilt:"99 Cents Only", nearestSA:"San Bernardino (E St) – San Bernardino (6.4 mi)", cotenants:"Freestanding; Rialto Foothill Blvd neighborhood retail", notes:"Freestanding former 99 Cents Only along W. Foothill Blvd in Rialto, offering a flexible footprint ranging from 8,000 to 26,000 SF with open floor plates and independent parking. The freestanding format and size range make this a highly adaptable site for a full Salvation Army retail and distribution operation.", photo:null, flyer:"https://ahprd1cdn.csgpimgs.com/i2/VKCSDXd3rCKFuiuo5iDnNYDjC1FZQFbUO8yiWB-qdmk/116/image.jpg" },
+  { rank:"Yellow", score:74, address:"8521 Van Nuys Blvd", city:"Panorama City", state:"CA", zip:"91402", submarket:null, sqft:"12,489", rent:null, opx:null, asBuilt:"Pep Boys (Auto Service)", nearestSA:"Granada Hills – North Hills (2.3 mi)", cotenants:"Pep Boys (co-tenant), surrounding Panorama City neighborhood retail", notes:"Freestanding former Pep Boys in Panorama City along the heavily traveled Van Nuys Blvd corridor, offering excellent visibility and convenient access in a densely populated, value-oriented community. The open-span floor plate and functional drive-through access points support an efficient donation receiving operation.", photo:"https://ahprd1cdn.csgpimgs.com/i2/8ta4k7XRbRXdfKaniI3lEbHGL9TsRuLPTOXQHv3dO78/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/f1AW9dwS8tNM6JGNwSmc_jE9HA8nEZxA4916kV2hd1c/document.pdf" },
+  { rank:"Yellow", score:73, address:"23681 Newhall Ave", city:"Santa Clarita", state:"CA", zip:"91321", submarket:"Santa Clarita Valley", sqft:"9,200", rent:"$22–24", opx:"NNN", asBuilt:"Retail (2-Story)", nearestSA:"Canyon Country – Canyon Country (2.8 mi)", cotenants:"Santa Clarita Valley retail corridor tenants", notes:"Freestanding two-story retail building on Newhall Ave in Santa Clarita — a rapidly growing submarket with limited existing Salvation Army coverage. The multi-level format offers flexibility for ground-floor retail operations and upper-level storage or administrative use.", photo:"https://ahprd1cdn.csgpimgs.com/i2/yVzJdgRbBYP5IjRYkuAixpoLd-iU45CjHKDKeO92DTo/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/sYwhSP4puGYYcGYlDdejJj7QtyQ8Puw5AcfwZcmuzVM/document.pdf" },
+  { rank:"Yellow", score:72, address:"2050 W Empire Ave", city:"Burbank", state:"CA", zip:"91504", submarket:null, sqft:"9,360", rent:null, opx:null, asBuilt:"Retail", nearestSA:"Glendale – Glendale (6.8 mi)", cotenants:"David's Bridal, Burbank retail corridor tenants", notes:"Inline co-tenancy adjacent to David's Bridal in a Burbank retail corridor, benefiting from consistent destination-shopping traffic and shared parking. The space offers strong access from W. Empire Ave and proximity to established neighborhood commercial uses.", photo:"https://ahprd1cdn.csgpimgs.com/i2/7pAMwC8uQdajWQAbPt2CCOC7dKL8a7QDSjqvkxXHAXE/116/image.jpg", flyer:null },
+  { rank:"Yellow", score:72, address:"30125-30135 Agoura Rd", city:"Agoura Hills", state:"CA", zip:"91301", submarket:"Calabasas/Westlake Vill", sqft:"8,179", rent:"$28.00", opx:"NNN", asBuilt:"Retail", nearestSA:"Newbury Park – Thousand Oaks (6.8 mi)", cotenants:"Agoura Hills retail corridor tenants", notes:"Well-positioned inline space in the Agoura Hills/Westlake Village submarket, serving one of the highest-income donor demographics in the greater Los Angeles area. The Agoura Rd corridor offers excellent visibility and access for a boutique-format Salvation Army with strong donation upside.", photo:"https://ahprd1cdn.csgpimgs.com/i2/X2bncOPUey5SpydXmMQd_NcZ8t7JA4ALgxz8hTR7jRY/116/image.jpg", flyer:null },
+  { rank:"Yellow", score:68, address:"4635 Chino Hills Pky", city:"Chino Hills", state:"CA", zip:"91709", submarket:null, sqft:null, rent:null, opx:null, asBuilt:"Retail (details pending)", nearestSA:"Chino – Chino (7.3 mi)", cotenants:"Chino Hills Pkwy retail corridor tenants", notes:"Located along the Chino Hills Pkwy commercial corridor in one of the Inland Empire's fastest-growing suburban markets, this site offers access to a large and expanding residential base with strong donation potential. Additional details are being gathered to complete the site evaluation.", photo:null, flyer:null },
+  { rank:"Yellow", score:68, address:"6726 W Sunset Blvd", city:"Los Angeles", state:"CA", zip:"90028", submarket:null, sqft:"16,000", rent:"pending", opx:"NNN", asBuilt:"Rite Aid (Drug Store)", nearestSA:"Los Angeles (Pico) – Los Angeles (4.4 mi)", cotenants:"Hollywood entertainment and neighborhood retail district", notes:"Freestanding former Rite Aid on W. Sunset Blvd in Hollywood, offering a high-profile address with strong pedestrian and vehicular traffic along one of LA's most recognized retail corridors. The freestanding format allows for full building identification, dedicated parking, and an efficient donation drop-off configuration.", photo:"https://ahprd1cdn.csgpimgs.com/i2/_8Pi4EDjgk4mGb5r0sltX2Ikc4g7sBBaK_afTcdz38k/116/image.jpg", flyer:"https://ahprd1cdn.csgpimgs.com/d2/WXLn36s7l_ymiJe63k1pE5XD2SVz81jYLMCRIRnHwf0/document.pdf" },
+  { rank:"Yellow", score:64, address:"12820-12880 Beach Blvd", city:"Stanton", state:"CA", zip:"90680", submarket:null, sqft:"9,860", rent:"pending", opx:null, asBuilt:"Inline Retail", nearestSA:"Buena Park – Buena Park (4.1 mi)", cotenants:"Walmart, neighborhood center inline tenants", notes:"Walmart-anchored neighborhood center on Beach Blvd in Stanton offering maximum foot traffic in a value-oriented retail corridor. The Walmart co-tenancy drives high daily visits from budget-conscious shoppers — a core Salvation Army donation and customer demographic.", photo:"https://ahprd1cdn.csgpimgs.com/i2/DZayRcllSRkSuOcecox1NVwc9p3DXXAjtKUgUVc20cU/116/image.jpg", flyer:null },
+];
+
+/* ── State ──────────────────────────────────────────────────────────────── */
+let currentFilter = 'all';
+
+/* ── SVG helpers ─────────────────────────────────────────────────────────── */
+const iconPhoto = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+const iconLink  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+const iconPin   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const iconDoc   = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+
+/* ── Render ──────────────────────────────────────────────────────────────── */
+function formatRent(r) {
+  if (!r || r === 'pending' || r === 'Pending') return null;
+  if (typeof r === 'number') return `$${r.toFixed(2)}/SF`;
+  const n = parseFloat(String(r).replace(/[^0-9.]/g, ''));
+  if (!isNaN(n)) return `$${n.toFixed(2)}/SF`;
+  return r;
+}
+
+function rentSortVal(r) {
+  if (!r || String(r).toLowerCase() === 'pending') return Infinity;
+  const n = parseFloat(String(r).replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? Infinity : n;
+}
+
+function buildCard(s, idx) {
+  const rankClass = s.rank === 'Green' ? 'green' : 'yellow';
+  const rentDisplay = formatRent(s.rent) || '<span class="pending">TBD</span>';
+  const sqftDisplay = s.sqft || '<span class="pending">TBD</span>';
+  const opxDisplay  = s.opx  || '<span class="pending">—</span>';
+
+  const photoEl = s.photo
+    ? `<img class="card-photo" src="${s.photo}" alt="${s.address}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=card-no-photo>${iconPhoto}</div>'">`
+    : `<div class="card-no-photo">${iconPhoto}</div>`;
+
+  const photoLink = s.photo
+    ? `<a class="card-link" href="${s.photo}" target="_blank" rel="noopener">${iconPhoto} Photo</a>`
+    : '';
+  const flyerLink = s.flyer
+    ? `<a class="card-link" href="${s.flyer}" target="_blank" rel="noopener">${iconDoc} Flyer</a>`
+    : '';
+
+  return `
+<div class="site-card rank-${rankClass}" data-rank="${s.rank}" data-score="${s.score}" data-rent="${rentSortVal(s.rent)}" data-city="${s.city}">
+  ${photoEl}
+  <div class="score-badge ${rankClass}">
+    <span class="score-num">${s.score}</span>
+    <span class="score-lbl">Score</span>
+  </div>
+  <div class="card-body">
+    <div class="card-address">${s.address}</div>
+    <div class="card-city">${s.city}, ${s.state}${s.zip ? ' ' + s.zip : ''}</div>
+
+    <div class="metrics-strip">
+      <div class="metric">
+        <div class="metric-label">Sq Ft</div>
+        <div class="metric-value">${s.sqft || '<span class="pending">TBD</span>'}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Base Rent</div>
+        <div class="metric-value">${rentDisplay}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Lease Type</div>
+        <div class="metric-value">${opxDisplay}</div>
+      </div>
+    </div>
+
+    <div class="former-use-row">
+      ${s.asBuilt ? `<span class="tag">${iconDoc} ${s.asBuilt}</span>` : ''}
+      ${s.nearestSA ? `<span class="nearest-sa">${iconPin} ${s.nearestSA}</span>` : ''}
+    </div>
+
+    ${s.cotenants ? `<div class="cotenants-row"><span class="cotenants-label">Co-tenants: </span>${s.cotenants}</div>` : ''}
+    ${s.notes ? `<div class="card-notes">${s.notes}</div>` : ''}
+  </div>
+  <div class="card-footer">
+    ${photoLink}
+    ${flyerLink}
+    ${!photoLink && !flyerLink ? '<span style="font-size:.72rem;color:var(--dim);">No links available</span>' : ''}
+  </div>
+</div>`;
+}
+
+function getSorted(sites) {
+  const sort = document.getElementById('sort-select').value;
+  const copy = [...sites];
+  if (sort === 'score-desc') copy.sort((a,b) => b.score - a.score);
+  else if (sort === 'score-asc') copy.sort((a,b) => a.score - b.score);
+  else if (sort === 'rent-asc') copy.sort((a,b) => rentSortVal(a.rent) - rentSortVal(b.rent));
+  else if (sort === 'city-az') copy.sort((a,b) => a.city.localeCompare(b.city));
+  return copy;
+}
+
+function render() {
+  const greenSites  = SITES.filter(s => s.rank === 'Green');
+  const yellowSites = SITES.filter(s => s.rank === 'Yellow');
+
+  const showGreen  = currentFilter === 'all' || currentFilter === 'green';
+  const showYellow = currentFilter === 'all' || currentFilter === 'yellow';
+
+  document.getElementById('section-green').classList.toggle('hidden', !showGreen);
+  document.getElementById('section-yellow').classList.toggle('hidden', !showYellow);
+
+  if (showGreen) {
+    document.getElementById('grid-green').innerHTML = getSorted(greenSites).map(buildCard).join('');
+    document.getElementById('green-count').textContent = `${greenSites.length} sites`;
+  }
+  if (showYellow) {
+    document.getElementById('grid-yellow').innerHTML = getSorted(yellowSites).map(buildCard).join('');
+    document.getElementById('yellow-count').textContent = `${yellowSites.length} sites`;
+  }
+
+  const visibleCount = (showGreen ? greenSites.length : 0) + (showYellow ? yellowSites.length : 0);
+  document.getElementById('count-badge').textContent = `${visibleCount} sites`;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.getElementById('btn-all').className    = 'rank-btn' + (f === 'all'    ? ' active-all'    : '');
+  document.getElementById('btn-green').className  = 'rank-btn' + (f === 'green'  ? ' active-green'  : '');
+  document.getElementById('btn-yellow').className = 'rank-btn' + (f === 'yellow' ? ' active-yellow' : '');
+  render();
+}
+
+function applySort() { render(); }
+
+/* ── Init ─────────────────────────────────────────────────────────────────── */
+render();
+</script>
+</body>
+</html>
