@@ -85,5 +85,27 @@
       "lat": 33.990510510522
     }
   ],
-  "SoCal update": []
+  "SoCal update": [
+    {
+      "survey_order": "1.0",
+      "rank": "Green",
+      "street": "11836-11840 Artesia Blvd",
+      "city": "Artesia",
+      "state": "CA",
+      "zip": "90701.0",
+      "submarket": "Mid-Cities",
+      "available_sqft": "8460.0",
+      "base_rent": "26.88",
+      "opx": "MG",
+      "site_notes": "Freestanding building with 34 parking stalls, 2nd gen hardware store. prime donation drop off area",
+      "as_built": "Hardware Store",
+      "photo_link": "https://ahprd1cdn.csgpimgs.com/i2/UtoXUsvEDlW1EL1RyT66VL2_JTzpsGZHKqQneY5dO6w/116/image.jpg",
+      "flyer_link": "https://ahprd1cdn.csgpimgs.com/i2/3v08XCO0C7-8oPOkdTtsTKZ5JPJMrtPzSjf4Ljy-SYU/116/image.jpg",
+      "broker": "Ron Younf",
+      "broker_email": "rsyoung@lee-associates.com",
+      "phone": "",
+      "lng": -118.081354153207,
+      "lat": 33.872973767252
+    }
+  ]
 }
