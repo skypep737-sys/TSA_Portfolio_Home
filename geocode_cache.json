@@ -610,5 +610,29 @@
   "20655 amar rd|walnut|ca|91789.0": [
     null,
     null
+  ],
+  "25252 mcintyre st|laguna hills|ca|92653.0": [
+    33.596304044982,
+    -117.679815222378
+  ],
+  "30192 town center dr|laguna niguel|ca|92677.0": [
+    33.524743898765,
+    -117.715749324595
+  ],
+  "704-880 arneill rd|camarillo|ca|93010.0": [
+    null,
+    null
+  ],
+  "4635 chino hills pky|chino hills|ca|91709.0": [
+    33.982704825588,
+    -117.702943587825
+  ],
+  "29787 antelope rd|menifee|ca|92584.0": [
+    null,
+    null
+  ],
+  "6755 van nuys blvd|van nuys|ca|91405.0": [
+    34.193327244782,
+    -118.448787035715
   ]
 }
