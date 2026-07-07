@@ -337,6 +337,27 @@
       "phone": "3236093171.0",
       "lng": -118.093993444579,
       "lat": 34.577661061142
+    },
+    {
+      "survey_order": "not shared",
+      "rank": "",
+      "street": "10821 Long beach",
+      "city": "Lynwood",
+      "state": "CA",
+      "zip": "",
+      "submarket": "",
+      "available_sqft": "18000.0",
+      "base_rent": "27.0",
+      "opx": "3.0",
+      "site_notes": "jr Anchor space available, cotenants with Smart & Final, Daily Prices, Sally beauty, And O'Reilly",
+      "as_built": "",
+      "photo_link": "",
+      "flyer_link": "",
+      "broker": "",
+      "broker_email": "",
+      "phone": "",
+      "lng": -118.213184135602,
+      "lat": 33.935937617204
     }
   ]
 }
