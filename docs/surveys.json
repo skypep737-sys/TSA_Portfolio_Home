@@ -85,26 +85,7 @@
       "lat": 33.990510510522
     }
   ],
-  "San Bern update": [
-    {
-      "survey_order": "12.0",
-      "rank": "Green",
-      "street": "564-586 W Foothill Blvd",
-      "city": "Rialto",
-      "state": "CA",
-      "zip": "92376-4800",
-      "submarket": "",
-      "available_sqft": "10640.0",
-      "base_rent": "18.0",
-      "opx": "$12 NNN",
-      "site_notes": "inline space \nishopping center anchored by Family Dollar and Furniture for less",
-      "as_built": "Womens Clothing",
-      "photo_link": "https://ahprd1cdn.csgpimgs.com/i2/fJzpDLri6Xb_ZGBaBP_wqU6QmGR9S-VDVSIbgb8IjBY/116/image.jpg",
-      "flyer_link": "https://ahprd1cdn.csgpimgs.com/d2/BFXcBjRUFERob1UwGFX7vK1_n26jQbkwQ6rJfxNem3M/document.pdf",
-      "lng": -117.381040700445,
-      "lat": 34.106817838041
-    }
-  ],
+  "San Bern update": [],
   "SoCal update": [
     {
       "survey_order": "2.0",
