@@ -1,21 +1,5 @@
 [
   {
-    "site_id": "100.0",
-    "store_name": "New Store Pending",
-    "full_address": "170 East El Camino Real, Sunnyvale CA",
-    "deal_type": "Newlo",
-    "deal_status": "On Hold",
-    "deal_notes": "Skyler Peppo - Skyler Peppo - Pending use approval from REI + Safeway - more info to come",
-    "street": "170 East El Camino Real",
-    "city": "Sunnyvale",
-    "state": "CA",
-    "zip": "",
-    "drumline": "130.0",
-    "gross_sales_rank": "",
-    "lat": 37.368368368522,
-    "lng": -122.03412656179
-  },
-  {
     "site_id": "101.0",
     "store_name": "New Store Pending",
     "full_address": "26881 Aliso Creek Road, Aliso Viejo CA",
